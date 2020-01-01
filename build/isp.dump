@@ -1,0 +1,3944 @@
+
+isp:     file format elf64-littleriscv
+
+
+Disassembly of section .text:
+
+00000000805e0000 <_start>:
+
+.section .text.start, "ax", @progbits
+.globl _start
+_start:
+
+  j main
+    805e0000:	0040006f          	j	805e0004 <main>
+
+00000000805e0004 <main>:
+    }
+}
+
+//============
+int main(void)
+{
+    805e0004:	7159                	addi	sp,sp,-112
+    805e0006:	f486                	sd	ra,104(sp)
+    805e0008:	f0a2                	sd	s0,96(sp)
+    805e000a:	eca6                	sd	s1,88(sp)
+    805e000c:	e8ca                	sd	s2,80(sp)
+    805e000e:	e4ce                	sd	s3,72(sp)
+    805e0010:	e0d2                	sd	s4,64(sp)
+    805e0012:	fc56                	sd	s5,56(sp)
+    805e0014:	f85a                	sd	s6,48(sp)
+    805e0016:	f45e                	sd	s7,40(sp)
+    // Initialize bss data to 0
+    extern unsigned int _bss;
+    extern unsigned int _ebss;
+    unsigned int *dst;
+    dst = &_bss;
+    805e0018:	00002797          	auipc	a5,0x2
+    805e001c:	6e878793          	addi	a5,a5,1768 # 805e2700 <_bss>
+    while(dst < &_ebss)
+    805e0020:	00013717          	auipc	a4,0x13
+    805e0024:	82070713          	addi	a4,a4,-2016 # 805f2840 <_ebss>
+    805e0028:	00e7eb63          	bltu	a5,a4,805e003e <main+0x3a>
+        *dst++ = 0;
+
+    fpioa_init();
+    805e002c:	00001097          	auipc	ra,0x1
+    805e0030:	080080e7          	jalr	128(ra) # 805e10ac <fpioa_init>
+
+    if (read_csr(mhartid) != 0) {
+    805e0034:	f14027f3          	csrr	a5,mhartid
+    805e0038:	c799                	beqz	a5,805e0046 <main+0x42>
+        core0_sync = 1;
+        while (core1_sync == 0) {
+            asm("nop");
+    805e003a:	0001                	nop
+    805e003c:	bffd                	j	805e003a <main+0x36>
+        *dst++ = 0;
+    805e003e:	0791                	addi	a5,a5,4
+    805e0040:	fe07ae23          	sw	zero,-4(a5)
+    805e0044:	b7d5                	j	805e0028 <main+0x24>
+
+    int count = 0;
+    uint8_t c;
+    uint8_t *sram_start = (uint8_t *)0x80000000; 
+
+    fpioa_set_function(4, FUNC_UART1_RX + UART_NUM * 2);
+    805e0046:	04400593          	li	a1,68
+    805e004a:	4511                	li	a0,4
+    805e004c:	00001097          	auipc	ra,0x1
+    805e0050:	146080e7          	jalr	326(ra) # 805e1192 <fpioa_set_function>
+    fpioa_set_function(5, FUNC_UART1_TX + UART_NUM * 2);
+    805e0054:	04500593          	li	a1,69
+    805e0058:	4515                	li	a0,5
+    805e005a:	00001097          	auipc	ra,0x1
+    805e005e:	138080e7          	jalr	312(ra) # 805e1192 <fpioa_set_function>
+
+    // Initialize and configure UART
+    uart_init(UART_NUM);
+    805e0062:	4509                	li	a0,2
+    805e0064:	00001097          	auipc	ra,0x1
+    805e0068:	788080e7          	jalr	1928(ra) # 805e17ec <uart_init>
+    uart_configure(UART_NUM, 115200, 8, UART_STOP_1, UART_PARITY_NONE);
+    805e006c:	65f1                	lui	a1,0x1c
+    805e006e:	4701                	li	a4,0
+    805e0070:	4681                	li	a3,0
+    805e0072:	4621                	li	a2,8
+    805e0074:	20058593          	addi	a1,a1,512 # 1c200 <_start-0x805c3e00>
+    805e0078:	4509                	li	a0,2
+    805e007a:	00001097          	auipc	ra,0x1
+    805e007e:	6cc080e7          	jalr	1740(ra) # 805e1746 <uart_configure>
+
+    // clear SRAM
+    memset(sram_start, 0, 0x5E0000);
+    805e0082:	4505                	li	a0,1
+    805e0084:	005e0637          	lui	a2,0x5e0
+    805e0088:	4581                	li	a1,0
+    805e008a:	057e                	slli	a0,a0,0x1f
+    805e008c:	00001097          	auipc	ra,0x1
+    805e0090:	f34080e7          	jalr	-204(ra) # 805e0fc0 <memset>
+    // clear isp_cb structure
+    memset(&cb, 0, sizeof(cb));
+    805e0094:	6641                	lui	a2,0x10
+    805e0096:	12060613          	addi	a2,a2,288 # 10120 <_start-0x805cfee0>
+    805e009a:	4581                	li	a1,0
+    805e009c:	00002517          	auipc	a0,0x2
+    805e00a0:	68450513          	addi	a0,a0,1668 # 805e2720 <cb>
+        // read next token
+        int16_t r = SLIP_process_byte(c, (slip_state_t *) &cb.slip_state);
+
+        if (r >= 0) {
+            // put byte into receive buffer
+            cb.buffer[cb.recv_count++] = (uint8_t)r;
+    805e00a4:	69c1                	lui	s3,0x10
+    memset(&cb, 0, sizeof(cb));
+    805e00a6:	00001097          	auipc	ra,0x1
+    805e00aa:	f1a080e7          	jalr	-230(ra) # 805e0fc0 <memset>
+    805e00ae:	00012497          	auipc	s1,0x12
+    805e00b2:	67248493          	addi	s1,s1,1650 # 805f2720 <cb+0x10000>
+            }
+        }
+
+        if (r == SLIP_FINISHED_FRAME) {
+            // end of frame, set 'command' to be processed
+            cb.command_ptr = (isp_request_t *)cb.buffer;
+    805e00b6:	00002a17          	auipc	s4,0x2
+    805e00ba:	66ea0a13          	addi	s4,s4,1646 # 805e2724 <cb+0x4>
+            cb.buffer[cb.recv_count++] = (uint8_t)r;
+    805e00be:	00002917          	auipc	s2,0x2
+    805e00c2:	66290913          	addi	s2,s2,1634 # 805e2720 <cb>
+            if (cb.recv_count > sizeof(isp_request_t)) {
+    805e00c6:	01098a93          	addi	s5,s3,16 # 10010 <_start-0x805cfff0>
+        count = uart_receive_data(UART_NUM, (char *)&c, 1);
+    805e00ca:	4605                	li	a2,1
+    805e00cc:	00f10593          	addi	a1,sp,15
+    805e00d0:	4509                	li	a0,2
+    805e00d2:	00001097          	auipc	ra,0x1
+    805e00d6:	5ec080e7          	jalr	1516(ra) # 805e16be <uart_receive_data>
+        if (count == 0) continue;
+    805e00da:	d965                	beqz	a0,805e00ca <main+0xc6>
+        int16_t r = SLIP_process_byte(c, (slip_state_t *) &cb.slip_state);
+    805e00dc:	00f14503          	lbu	a0,15(sp)
+    805e00e0:	00012597          	auipc	a1,0x12
+    805e00e4:	75458593          	addi	a1,a1,1876 # 805f2834 <cb+0x10114>
+    805e00e8:	00001097          	auipc	ra,0x1
+    805e00ec:	e76080e7          	jalr	-394(ra) # 805e0f5e <SLIP_process_byte>
+        if (r >= 0) {
+    805e00f0:	0005079b          	sext.w	a5,a0
+    805e00f4:	0607c763          	bltz	a5,805e0162 <main+0x15e>
+            cb.buffer[cb.recv_count++] = (uint8_t)r;
+    805e00f8:	1104a783          	lw	a5,272(s1)
+    805e00fc:	0017869b          	addiw	a3,a5,1
+    805e0100:	1782                	slli	a5,a5,0x20
+    805e0102:	9381                	srli	a5,a5,0x20
+    805e0104:	97ca                	add	a5,a5,s2
+    805e0106:	00012617          	auipc	a2,0x12
+    805e010a:	72d62523          	sw	a3,1834(a2) # 805f2830 <cb+0x10110>
+    805e010e:	00a78223          	sb	a0,4(a5)
+            if (cb.recv_count > sizeof(isp_request_t)) {
+    805e0112:	00daf863          	bleu	a3,s5,805e0122 <main+0x11e>
+                cb.error = ISPMODE_RET_BAD_DATA_LEN;
+    805e0116:	0e100793          	li	a5,225
+    805e011a:	00012717          	auipc	a4,0x12
+    805e011e:	70f72f23          	sw	a5,1822(a4) # 805f2838 <cb+0x10118>
+            cb.recv_count = 0;
+        }
+        // ===============================================================
+        
+        // wait for a valid SLIP command or an error
+        if ((cb.command_ptr == NULL) && (cb.error == 0)) continue;
+    805e0122:	1084b403          	ld	s0,264(s1)
+    805e0126:	e831                	bnez	s0,805e017a <main+0x176>
+    805e0128:	1184a783          	lw	a5,280(s1)
+    805e012c:	dfd9                	beqz	a5,805e00ca <main+0xc6>
+            cb.command_ptr = NULL;
+            // send the command response
+            if (response.reason != ISPMODE_RET_IGNORE) SLIP_send((const void *)&response, 2);
+        }
+
+        if (cb.error != 0) {
+    805e012e:	1184a783          	lw	a5,280(s1)
+    805e0132:	dfc1                	beqz	a5,805e00ca <main+0xc6>
+            // SLIP command parse error, prepare response
+            isp_response_t response = {
+    805e0134:	fd200713          	li	a4,-46
+    805e0138:	00e10c23          	sb	a4,24(sp)
+    805e013c:	0ff7f793          	andi	a5,a5,255
+                    .op_ret = ISPMODE_NOP,
+                    .reason = cb.error
+            };
+            // reset error
+            cb.error = 0;
+    805e0140:	00012717          	auipc	a4,0x12
+    805e0144:	6e072c23          	sw	zero,1784(a4) # 805f2838 <cb+0x10118>
+            isp_response_t response = {
+    805e0148:	00f10ca3          	sb	a5,25(sp)
+            // send the command response
+            if (response.reason != ISPMODE_RET_IGNORE) SLIP_send((const void *) &response, 2);
+    805e014c:	0ee00713          	li	a4,238
+    805e0150:	f6e78de3          	beq	a5,a4,805e00ca <main+0xc6>
+    805e0154:	4589                	li	a1,2
+    805e0156:	0828                	addi	a0,sp,24
+    805e0158:	00001097          	auipc	ra,0x1
+    805e015c:	dde080e7          	jalr	-546(ra) # 805e0f36 <SLIP_send>
+    805e0160:	b7ad                	j	805e00ca <main+0xc6>
+        if (r == SLIP_FINISHED_FRAME) {
+    805e0162:	5779                	li	a4,-2
+    805e0164:	fae79fe3          	bne	a5,a4,805e0122 <main+0x11e>
+            cb.command_ptr = (isp_request_t *)cb.buffer;
+    805e0168:	00012797          	auipc	a5,0x12
+    805e016c:	6d47b023          	sd	s4,1728(a5) # 805f2828 <cb+0x10108>
+            cb.recv_count = 0;
+    805e0170:	00012797          	auipc	a5,0x12
+    805e0174:	6c07a023          	sw	zero,1728(a5) # 805f2830 <cb+0x10110>
+    805e0178:	b76d                	j	805e0122 <main+0x11e>
+                    .op_ret = cb.command_ptr->op,
+    805e017a:	00144783          	lbu	a5,1(s0)
+    805e017e:	00044703          	lbu	a4,0(s0)
+            isp_response_t response = {
+    805e0182:	000108a3          	sb	zero,17(sp)
+                    .op_ret = cb.command_ptr->op,
+    805e0186:	07a2                	slli	a5,a5,0x8
+    805e0188:	8fd9                	or	a5,a5,a4
+            isp_response_t response = {
+    805e018a:	00f10823          	sb	a5,16(sp)
+    switch (cb.command_ptr->op) {
+    805e018e:	f2e7879b          	addiw	a5,a5,-210
+    805e0192:	03079693          	slli	a3,a5,0x30
+    805e0196:	92c1                	srli	a3,a3,0x30
+    805e0198:	4735                	li	a4,13
+    805e019a:	16d76663          	bltu	a4,a3,805e0306 <main+0x302>
+    805e019e:	00002717          	auipc	a4,0x2
+    805e01a2:	e7a70713          	addi	a4,a4,-390 # 805e2018 <__clzdi2+0x32>
+    805e01a6:	00269793          	slli	a5,a3,0x2
+    805e01aa:	97ba                	add	a5,a5,a4
+    805e01ac:	439c                	lw	a5,0(a5)
+    805e01ae:	97ba                	add	a5,a5,a4
+    805e01b0:	8782                	jr	a5
+            flash_chip = cb.command_ptr->address;
+    805e01b2:	00944783          	lbu	a5,9(s0)
+    805e01b6:	00844503          	lbu	a0,8(s0)
+    805e01ba:	07a2                	slli	a5,a5,0x8
+    805e01bc:	8fc9                	or	a5,a5,a0
+    805e01be:	00a44503          	lbu	a0,10(s0)
+    805e01c2:	0542                	slli	a0,a0,0x10
+    805e01c4:	8fc9                	or	a5,a5,a0
+    805e01c6:	00b44503          	lbu	a0,11(s0)
+    805e01ca:	0562                	slli	a0,a0,0x18
+    805e01cc:	8d5d                	or	a0,a0,a5
+    805e01ce:	2501                	sext.w	a0,a0
+            if (flash_chip != 0 && flash_chip != 1) {
+    805e01d0:	4785                	li	a5,1
+    805e01d2:	00a7f463          	bleu	a0,a5,805e01da <main+0x1d6>
+                resp->reason = ISPMODE_RET_INVALID_COMMAND;
+    805e01d6:	578d                	li	a5,-29
+    805e01d8:	a865                	j	805e0290 <main+0x28c>
+            if (!(cb.status & ISPMODE_STATUS_FLASH_SET)) {
+    805e01da:	00092783          	lw	a5,0(s2)
+    805e01de:	8b89                	andi	a5,a5,2
+    805e01e0:	e795                	bnez	a5,805e020c <main+0x208>
+                if (FLASH_OK == flash_init(flash_chip)) {
+    805e01e2:	0ff57513          	andi	a0,a0,255
+    805e01e6:	00000097          	auipc	ra,0x0
+    805e01ea:	742080e7          	jalr	1858(ra) # 805e0928 <flash_init>
+    805e01ee:	2501                	sext.w	a0,a0
+                    resp->reason = ISPMODE_RET_BAD_INITIALIZATION;
+    805e01f0:	5791                	li	a5,-28
+                if (FLASH_OK == flash_init(flash_chip)) {
+    805e01f2:	ed59                	bnez	a0,805e0290 <main+0x28c>
+                    flash_enable_quad_mode();
+    805e01f4:	00001097          	auipc	ra,0x1
+    805e01f8:	a50080e7          	jalr	-1456(ra) # 805e0c44 <flash_enable_quad_mode>
+                    cb.status |= ISPMODE_STATUS_FLASH_SET;
+    805e01fc:	00092783          	lw	a5,0(s2)
+    805e0200:	0027e793          	ori	a5,a5,2
+    805e0204:	00002717          	auipc	a4,0x2
+    805e0208:	50f72e23          	sw	a5,1308(a4) # 805e2720 <cb>
+            resp->reason = ISPMODE_RET_OK;
+    805e020c:	5781                	li	a5,-32
+    805e020e:	a049                	j	805e0290 <main+0x28c>
+            if (!(cb.status & ISPMODE_STATUS_FLASH_SET)) {
+    805e0210:	00092783          	lw	a5,0(s2)
+    805e0214:	8b89                	andi	a5,a5,2
+    805e0216:	d3e1                	beqz	a5,805e01d6 <main+0x1d2>
+            flash_chip_erase();
+    805e0218:	00001097          	auipc	ra,0x1
+    805e021c:	a00080e7          	jalr	-1536(ra) # 805e0c18 <flash_chip_erase>
+            while(flash_is_busy())
+    805e0220:	00000097          	auipc	ra,0x0
+    805e0224:	7e4080e7          	jalr	2020(ra) # 805e0a04 <flash_is_busy>
+    805e0228:	2501                	sext.w	a0,a0
+    805e022a:	f97d                	bnez	a0,805e0220 <main+0x21c>
+    805e022c:	b7c5                	j	805e020c <main+0x208>
+            if (!(cb.status & ISPMODE_STATUS_FLASH_SET)) {
+    805e022e:	00092783          	lw	a5,0(s2)
+    805e0232:	8b89                	andi	a5,a5,2
+    805e0234:	d3cd                	beqz	a5,805e01d6 <main+0x1d2>
+            if (cb.command_ptr->checksum != block_crc32((uint8_t *)cb.command_ptr + 8, cb.command_ptr->data_len + 8)) {
+    805e0236:	00d44783          	lbu	a5,13(s0)
+    805e023a:	00c44b03          	lbu	s6,12(s0)
+    805e023e:	00840513          	addi	a0,s0,8
+    805e0242:	07a2                	slli	a5,a5,0x8
+    805e0244:	0167e7b3          	or	a5,a5,s6
+    805e0248:	00e44b03          	lbu	s6,14(s0)
+    805e024c:	0b42                	slli	s6,s6,0x10
+    805e024e:	00fb67b3          	or	a5,s6,a5
+    805e0252:	00f44b03          	lbu	s6,15(s0)
+    805e0256:	0b62                	slli	s6,s6,0x18
+    805e0258:	00fb6b33          	or	s6,s6,a5
+    805e025c:	2b01                	sext.w	s6,s6
+    805e025e:	008b059b          	addiw	a1,s6,8
+    805e0262:	00001097          	auipc	ra,0x1
+    805e0266:	c02080e7          	jalr	-1022(ra) # 805e0e64 <block_crc32>
+    805e026a:	00544703          	lbu	a4,5(s0)
+    805e026e:	00444783          	lbu	a5,4(s0)
+    805e0272:	2501                	sext.w	a0,a0
+    805e0274:	0722                	slli	a4,a4,0x8
+    805e0276:	8f5d                	or	a4,a4,a5
+    805e0278:	00644783          	lbu	a5,6(s0)
+    805e027c:	07c2                	slli	a5,a5,0x10
+    805e027e:	8f5d                	or	a4,a4,a5
+    805e0280:	00744783          	lbu	a5,7(s0)
+    805e0284:	07e2                	slli	a5,a5,0x18
+    805e0286:	8fd9                	or	a5,a5,a4
+    805e0288:	2781                	sext.w	a5,a5
+    805e028a:	00a78663          	beq	a5,a0,805e0296 <main+0x292>
+                resp->reason = ISPMODE_RET_BAD_DATA_CHECKSUM;
+    805e028e:	5789                	li	a5,-30
+            resp->reason = ISPMODE_RET_OK;
+    805e0290:	00f108a3          	sb	a5,17(sp)
+            break;
+    805e0294:	a88d                	j	805e0306 <main+0x302>
+            if ((cb.command_ptr->data_len == 65536) || (cb.command_ptr->data_len == 4096)) {
+    805e0296:	013b0563          	beq	s6,s3,805e02a0 <main+0x29c>
+    805e029a:	6785                	lui	a5,0x1
+    805e029c:	02fb1a63          	bne	s6,a5,805e02d0 <main+0x2cc>
+            flash_address = cb.command_ptr->address;
+    805e02a0:	00944783          	lbu	a5,9(s0)
+    805e02a4:	00844b83          	lbu	s7,8(s0)
+    805e02a8:	07a2                	slli	a5,a5,0x8
+    805e02aa:	0177e7b3          	or	a5,a5,s7
+    805e02ae:	00a44b83          	lbu	s7,10(s0)
+    805e02b2:	0bc2                	slli	s7,s7,0x10
+    805e02b4:	00fbe7b3          	or	a5,s7,a5
+    805e02b8:	00b44b83          	lbu	s7,11(s0)
+    805e02bc:	0be2                	slli	s7,s7,0x18
+    805e02be:	00fbebb3          	or	s7,s7,a5
+    805e02c2:	2b81                	sext.w	s7,s7
+                sector_offset = flash_address & (cb.command_ptr->data_len - 1);
+    805e02c4:	fffb079b          	addiw	a5,s6,-1
+    805e02c8:	00fbf7b3          	and	a5,s7,a5
+            if (sector_offset != 0) {
+    805e02cc:	2781                	sext.w	a5,a5
+    805e02ce:	cfa9                	beqz	a5,805e0328 <main+0x324>
+    isp_response_t response = {
+    805e02d0:	0d100793          	li	a5,209
+    805e02d4:	00f11c23          	sh	a5,24(sp)
+    SLIP_send_frame_delimiter();
+    805e02d8:	00001097          	auipc	ra,0x1
+    805e02dc:	bde080e7          	jalr	-1058(ra) # 805e0eb6 <SLIP_send_frame_delimiter>
+    SLIP_send_frame_data_buf(&response, sizeof(isp_response_t));
+    805e02e0:	4589                	li	a1,2
+    805e02e2:	0828                	addi	a0,sp,24
+    805e02e4:	00001097          	auipc	ra,0x1
+    805e02e8:	c1c080e7          	jalr	-996(ra) # 805e0f00 <SLIP_send_frame_data_buf>
+    SLIP_send_frame_data_buf(str, strlen(str));
+    805e02ec:	45b9                	li	a1,14
+    805e02ee:	00002517          	auipc	a0,0x2
+    805e02f2:	d6250513          	addi	a0,a0,-670 # 805e2050 <__clzdi2+0x6a>
+    805e02f6:	00001097          	auipc	ra,0x1
+    805e02fa:	c0a080e7          	jalr	-1014(ra) # 805e0f00 <SLIP_send_frame_data_buf>
+    SLIP_send_frame_delimiter();
+    805e02fe:	00001097          	auipc	ra,0x1
+    805e0302:	bb8080e7          	jalr	-1096(ra) # 805e0eb6 <SLIP_send_frame_delimiter>
+            if (response.reason != ISPMODE_RET_IGNORE) SLIP_send((const void *)&response, 2);
+    805e0306:	01114703          	lbu	a4,17(sp)
+            cb.command_ptr = NULL;
+    805e030a:	00012797          	auipc	a5,0x12
+    805e030e:	5007bf23          	sd	zero,1310(a5) # 805f2828 <cb+0x10108>
+            if (response.reason != ISPMODE_RET_IGNORE) SLIP_send((const void *)&response, 2);
+    805e0312:	0ee00793          	li	a5,238
+    805e0316:	e0f70ce3          	beq	a4,a5,805e012e <main+0x12a>
+    805e031a:	4589                	li	a1,2
+    805e031c:	0808                	addi	a0,sp,16
+    805e031e:	00001097          	auipc	ra,0x1
+    805e0322:	c18080e7          	jalr	-1000(ra) # 805e0f36 <SLIP_send>
+    805e0326:	b521                	j	805e012e <main+0x12a>
+                sector_addr = flash_address & (~(cb.command_ptr->data_len - 1));
+    805e0328:	4160053b          	negw	a0,s6
+    805e032c:	00abf533          	and	a0,s7,a0
+    805e0330:	2501                	sext.w	a0,a0
+            if (cb.command_ptr->data_len == 65536) flash_64k_block_erase(sector_addr);
+    805e0332:	073b1163          	bne	s6,s3,805e0394 <main+0x390>
+    805e0336:	00001097          	auipc	ra,0x1
+    805e033a:	89e080e7          	jalr	-1890(ra) # 805e0bd4 <flash_64k_block_erase>
+            while (flash_is_busy() == FLASH_BUSY) {
+    805e033e:	4b05                	li	s6,1
+    805e0340:	00000097          	auipc	ra,0x0
+    805e0344:	6c4080e7          	jalr	1732(ra) # 805e0a04 <flash_is_busy>
+    805e0348:	2501                	sext.w	a0,a0
+    805e034a:	ff650be3          	beq	a0,s6,805e0340 <main+0x33c>
+            if (cb.command_ptr->op == ISPMODE_FLASH_WRITE) {
+    805e034e:	1084b783          	ld	a5,264(s1)
+    805e0352:	0017c703          	lbu	a4,1(a5)
+    805e0356:	0007c683          	lbu	a3,0(a5)
+    805e035a:	0722                	slli	a4,a4,0x8
+    805e035c:	8f55                	or	a4,a4,a3
+    805e035e:	0d400693          	li	a3,212
+    805e0362:	ead715e3          	bne	a4,a3,805e020c <main+0x208>
+                flash_write_data(flash_address, data_ptr, cb.command_ptr->data_len);
+    805e0366:	00d7c703          	lbu	a4,13(a5)
+    805e036a:	00c7c603          	lbu	a2,12(a5)
+    805e036e:	01040593          	addi	a1,s0,16
+    805e0372:	0722                	slli	a4,a4,0x8
+    805e0374:	8f51                	or	a4,a4,a2
+    805e0376:	00e7c603          	lbu	a2,14(a5)
+    805e037a:	855e                	mv	a0,s7
+    805e037c:	0642                	slli	a2,a2,0x10
+    805e037e:	8f51                	or	a4,a4,a2
+    805e0380:	00f7c603          	lbu	a2,15(a5)
+    805e0384:	0662                	slli	a2,a2,0x18
+    805e0386:	8e59                	or	a2,a2,a4
+    805e0388:	2601                	sext.w	a2,a2
+    805e038a:	00001097          	auipc	ra,0x1
+    805e038e:	93e080e7          	jalr	-1730(ra) # 805e0cc8 <flash_write_data>
+    805e0392:	bdad                	j	805e020c <main+0x208>
+            else flash_sector_erase(sector_addr);
+    805e0394:	00000097          	auipc	ra,0x0
+    805e0398:	7fc080e7          	jalr	2044(ra) # 805e0b90 <flash_sector_erase>
+    805e039c:	b74d                	j	805e033e <main+0x33a>
+            if (!(cb.status & ISPMODE_STATUS_FLASH_SET)) {
+    805e039e:	00092783          	lw	a5,0(s2)
+    805e03a2:	8b89                	andi	a5,a5,2
+    805e03a4:	e20789e3          	beqz	a5,805e01d6 <main+0x1d2>
+            if (cb.command_ptr->data_len != 4) {
+    805e03a8:	00d44703          	lbu	a4,13(s0)
+    805e03ac:	00c44783          	lbu	a5,12(s0)
+    805e03b0:	0722                	slli	a4,a4,0x8
+    805e03b2:	8f5d                	or	a4,a4,a5
+    805e03b4:	00e44783          	lbu	a5,14(s0)
+    805e03b8:	07c2                	slli	a5,a5,0x10
+    805e03ba:	8f5d                	or	a4,a4,a5
+    805e03bc:	00f44783          	lbu	a5,15(s0)
+    805e03c0:	07e2                	slli	a5,a5,0x18
+    805e03c2:	8fd9                	or	a5,a5,a4
+    805e03c4:	2781                	sext.w	a5,a5
+    805e03c6:	4711                	li	a4,4
+    805e03c8:	00e78463          	beq	a5,a4,805e03d0 <main+0x3cc>
+                resp->reason = ISPMODE_RET_BAD_DATA_LEN;
+    805e03cc:	5785                	li	a5,-31
+    805e03ce:	b5c9                	j	805e0290 <main+0x28c>
+            cb.command_ptr->data_len = *(uint32_t *)cb.command_ptr->data_buf;
+    805e03d0:	4810                	lw	a2,16(s0)
+            resp->reason = ISPMODE_RET_IGNORE;
+    805e03d2:	57b9                	li	a5,-18
+    805e03d4:	00f108a3          	sb	a5,17(sp)
+            cb.command_ptr->data_len = *(uint32_t *)cb.command_ptr->data_buf;
+    805e03d8:	0086579b          	srliw	a5,a2,0x8
+    805e03dc:	00f406a3          	sb	a5,13(s0)
+    805e03e0:	0106579b          	srliw	a5,a2,0x10
+    805e03e4:	00f40723          	sb	a5,14(s0)
+    805e03e8:	0186579b          	srliw	a5,a2,0x18
+    805e03ec:	00c40623          	sb	a2,12(s0)
+    805e03f0:	00f407a3          	sb	a5,15(s0)
+            if ((cb.command_ptr->data_len == 65536) || (cb.command_ptr->data_len == 4096)) {
+    805e03f4:	01360563          	beq	a2,s3,805e03fe <main+0x3fa>
+    805e03f8:	6785                	lui	a5,0x1
+    805e03fa:	02f61663          	bne	a2,a5,805e0426 <main+0x422>
+            flash_address = cb.command_ptr->address;
+    805e03fe:	00944783          	lbu	a5,9(s0)
+    805e0402:	00844503          	lbu	a0,8(s0)
+    805e0406:	07a2                	slli	a5,a5,0x8
+    805e0408:	8fc9                	or	a5,a5,a0
+    805e040a:	00a44503          	lbu	a0,10(s0)
+    805e040e:	0542                	slli	a0,a0,0x10
+    805e0410:	8fc9                	or	a5,a5,a0
+    805e0412:	00b44503          	lbu	a0,11(s0)
+    805e0416:	0562                	slli	a0,a0,0x18
+    805e0418:	8d5d                	or	a0,a0,a5
+    805e041a:	2501                	sext.w	a0,a0
+                sector_offset = flash_address & (cb.command_ptr->data_len - 1);
+    805e041c:	fff6079b          	addiw	a5,a2,-1
+    805e0420:	8fe9                	and	a5,a5,a0
+            if (sector_offset != 0) {
+    805e0422:	2781                	sext.w	a5,a5
+    805e0424:	cfa5                	beqz	a5,805e049c <main+0x498>
+                cb.command_ptr->data_len = 0;
+    805e0426:	00040623          	sb	zero,12(s0)
+    805e042a:	000406a3          	sb	zero,13(s0)
+    805e042e:	00040723          	sb	zero,14(s0)
+    805e0432:	000407a3          	sb	zero,15(s0)
+            cb.command_ptr->checksum = block_crc32((uint8_t *)cb.command_ptr + 8, cb.command_ptr->data_len + 8);
+    805e0436:	1084b403          	ld	s0,264(s1)
+    805e043a:	00d44783          	lbu	a5,13(s0)
+    805e043e:	00c44b03          	lbu	s6,12(s0)
+    805e0442:	00840513          	addi	a0,s0,8
+    805e0446:	07a2                	slli	a5,a5,0x8
+    805e0448:	0167e7b3          	or	a5,a5,s6
+    805e044c:	00e44b03          	lbu	s6,14(s0)
+    805e0450:	0b42                	slli	s6,s6,0x10
+    805e0452:	00fb67b3          	or	a5,s6,a5
+    805e0456:	00f44b03          	lbu	s6,15(s0)
+    805e045a:	0b62                	slli	s6,s6,0x18
+    805e045c:	00fb6b33          	or	s6,s6,a5
+    805e0460:	2b01                	sext.w	s6,s6
+    805e0462:	008b059b          	addiw	a1,s6,8
+    805e0466:	00001097          	auipc	ra,0x1
+    805e046a:	9fe080e7          	jalr	-1538(ra) # 805e0e64 <block_crc32>
+    805e046e:	2501                	sext.w	a0,a0
+    805e0470:	0085579b          	srliw	a5,a0,0x8
+    805e0474:	00a40223          	sb	a0,4(s0)
+    805e0478:	00f402a3          	sb	a5,5(s0)
+    805e047c:	0105579b          	srliw	a5,a0,0x10
+    805e0480:	0185551b          	srliw	a0,a0,0x18
+    805e0484:	00f40323          	sb	a5,6(s0)
+    805e0488:	00a403a3          	sb	a0,7(s0)
+            SLIP_send((const void *)cb.command_ptr, cb.command_ptr->data_len + 16);
+    805e048c:	010b059b          	addiw	a1,s6,16
+            SLIP_send((const void *)cb.command_ptr, 27);
+    805e0490:	8522                	mv	a0,s0
+    805e0492:	00001097          	auipc	ra,0x1
+    805e0496:	aa4080e7          	jalr	-1372(ra) # 805e0f36 <SLIP_send>
+            break;
+    805e049a:	b5b5                	j	805e0306 <main+0x302>
+                flash_read_data(flash_address, data_ptr, cb.command_ptr->data_len, FLASH_QUAD);
+    805e049c:	4691                	li	a3,4
+    805e049e:	01040593          	addi	a1,s0,16
+    805e04a2:	00001097          	auipc	ra,0x1
+    805e04a6:	8ac080e7          	jalr	-1876(ra) # 805e0d4e <flash_read_data>
+    805e04aa:	b771                	j	805e0436 <main+0x432>
+            if (!(cb.status & ISPMODE_STATUS_FLASH_SET)) {
+    805e04ac:	00092783          	lw	a5,0(s2)
+    805e04b0:	8b89                	andi	a5,a5,2
+    805e04b2:	d20782e3          	beqz	a5,805e01d6 <main+0x1d2>
+            resp->reason = ISPMODE_RET_IGNORE;
+    805e04b6:	57b9                	li	a5,-18
+            flash_read_jedec_id(&cb.command_ptr->data_buf[0]);
+    805e04b8:	01040513          	addi	a0,s0,16
+            resp->reason = ISPMODE_RET_IGNORE;
+    805e04bc:	00f108a3          	sb	a5,17(sp)
+            flash_read_jedec_id(&cb.command_ptr->data_buf[0]);
+    805e04c0:	00000097          	auipc	ra,0x0
+    805e04c4:	4fa080e7          	jalr	1274(ra) # 805e09ba <flash_read_jedec_id>
+            flash_read_unique(&cb.command_ptr->data_buf[3]);
+    805e04c8:	1084b503          	ld	a0,264(s1)
+    805e04cc:	054d                	addi	a0,a0,19
+    805e04ce:	00000097          	auipc	ra,0x0
+    805e04d2:	510080e7          	jalr	1296(ra) # 805e09de <flash_read_unique>
+            cb.command_ptr->checksum = block_crc32((uint8_t *)cb.command_ptr + 8, 19);
+    805e04d6:	1084b403          	ld	s0,264(s1)
+    805e04da:	45cd                	li	a1,19
+    805e04dc:	00840513          	addi	a0,s0,8
+    805e04e0:	00001097          	auipc	ra,0x1
+    805e04e4:	984080e7          	jalr	-1660(ra) # 805e0e64 <block_crc32>
+    805e04e8:	2501                	sext.w	a0,a0
+    805e04ea:	0085579b          	srliw	a5,a0,0x8
+    805e04ee:	00a40223          	sb	a0,4(s0)
+    805e04f2:	00f402a3          	sb	a5,5(s0)
+    805e04f6:	0105579b          	srliw	a5,a0,0x10
+    805e04fa:	0185551b          	srliw	a0,a0,0x18
+    805e04fe:	00f40323          	sb	a5,6(s0)
+    805e0502:	00a403a3          	sb	a0,7(s0)
+            SLIP_send((const void *)cb.command_ptr, 27);
+    805e0506:	45ed                	li	a1,27
+    805e0508:	b761                	j	805e0490 <main+0x48c>
+            if (cb.command_ptr->checksum != block_crc32((uint8_t *)cb.command_ptr + 8, cb.command_ptr->data_len + 8)) {
+    805e050a:	00d44783          	lbu	a5,13(s0)
+    805e050e:	00c44583          	lbu	a1,12(s0)
+    805e0512:	00840513          	addi	a0,s0,8
+    805e0516:	07a2                	slli	a5,a5,0x8
+    805e0518:	8fcd                	or	a5,a5,a1
+    805e051a:	00e44583          	lbu	a1,14(s0)
+    805e051e:	05c2                	slli	a1,a1,0x10
+    805e0520:	8fcd                	or	a5,a5,a1
+    805e0522:	00f44583          	lbu	a1,15(s0)
+    805e0526:	05e2                	slli	a1,a1,0x18
+    805e0528:	8ddd                	or	a1,a1,a5
+    805e052a:	25a1                	addiw	a1,a1,8
+    805e052c:	00001097          	auipc	ra,0x1
+    805e0530:	938080e7          	jalr	-1736(ra) # 805e0e64 <block_crc32>
+    805e0534:	00544703          	lbu	a4,5(s0)
+    805e0538:	00444783          	lbu	a5,4(s0)
+    805e053c:	2501                	sext.w	a0,a0
+    805e053e:	0722                	slli	a4,a4,0x8
+    805e0540:	8f5d                	or	a4,a4,a5
+    805e0542:	00644783          	lbu	a5,6(s0)
+    805e0546:	07c2                	slli	a5,a5,0x10
+    805e0548:	8f5d                	or	a4,a4,a5
+    805e054a:	00744783          	lbu	a5,7(s0)
+    805e054e:	07e2                	slli	a5,a5,0x18
+    805e0550:	8fd9                	or	a5,a5,a4
+    805e0552:	2781                	sext.w	a5,a5
+    805e0554:	d2a79de3          	bne	a5,a0,805e028e <main+0x28a>
+            uint8_t *sram = (uint8_t *)cb.command_ptr->address;
+    805e0558:	00944703          	lbu	a4,9(s0)
+    805e055c:	00844783          	lbu	a5,8(s0)
+            data_ptr = (uint8_t *)cb.command_ptr->data_buf;
+    805e0560:	01040613          	addi	a2,s0,16
+            uint8_t *sram = (uint8_t *)cb.command_ptr->address;
+    805e0564:	0722                	slli	a4,a4,0x8
+    805e0566:	8f5d                	or	a4,a4,a5
+    805e0568:	00a44783          	lbu	a5,10(s0)
+    805e056c:	07c2                	slli	a5,a5,0x10
+    805e056e:	8f5d                	or	a4,a4,a5
+    805e0570:	00b44783          	lbu	a5,11(s0)
+    805e0574:	07e2                	slli	a5,a5,0x18
+    805e0576:	8fd9                	or	a5,a5,a4
+    805e0578:	2781                	sext.w	a5,a5
+    805e057a:	02079513          	slli	a0,a5,0x20
+    805e057e:	9101                	srli	a0,a0,0x20
+            if (cb.command_ptr->address < 0x80000000) sram += 0x80000000;
+    805e0580:	0007c563          	bltz	a5,805e058a <main+0x586>
+    805e0584:	4785                	li	a5,1
+    805e0586:	07fe                	slli	a5,a5,0x1f
+    805e0588:	953e                	add	a0,a0,a5
+            for (uint32_t n = 0; n < cb.command_ptr->data_len; n++) {
+    805e058a:	4681                	li	a3,0
+    805e058c:	1084b583          	ld	a1,264(s1)
+    805e0590:	00d5c703          	lbu	a4,13(a1)
+    805e0594:	00c5c783          	lbu	a5,12(a1)
+    805e0598:	0722                	slli	a4,a4,0x8
+    805e059a:	8f5d                	or	a4,a4,a5
+    805e059c:	00e5c783          	lbu	a5,14(a1)
+    805e05a0:	07c2                	slli	a5,a5,0x10
+    805e05a2:	8f5d                	or	a4,a4,a5
+    805e05a4:	00f5c783          	lbu	a5,15(a1)
+    805e05a8:	07e2                	slli	a5,a5,0x18
+    805e05aa:	8fd9                	or	a5,a5,a4
+    805e05ac:	2781                	sext.w	a5,a5
+    805e05ae:	c4f6ffe3          	bleu	a5,a3,805e020c <main+0x208>
+                sram[n] = data_ptr[n];
+    805e05b2:	02069793          	slli	a5,a3,0x20
+    805e05b6:	9381                	srli	a5,a5,0x20
+    805e05b8:	00f60733          	add	a4,a2,a5
+    805e05bc:	00074703          	lbu	a4,0(a4)
+    805e05c0:	97aa                	add	a5,a5,a0
+            for (uint32_t n = 0; n < cb.command_ptr->data_len; n++) {
+    805e05c2:	2685                	addiw	a3,a3,1
+                sram[n] = data_ptr[n];
+    805e05c4:	00e78023          	sb	a4,0(a5) # 1000 <_start-0x805df000>
+    805e05c8:	b7d1                	j	805e058c <main+0x588>
+            if (cb.command_ptr->data_len != 4) {
+    805e05ca:	00d44703          	lbu	a4,13(s0)
+    805e05ce:	00c44783          	lbu	a5,12(s0)
+    805e05d2:	0722                	slli	a4,a4,0x8
+    805e05d4:	8f5d                	or	a4,a4,a5
+    805e05d6:	00e44783          	lbu	a5,14(s0)
+    805e05da:	07c2                	slli	a5,a5,0x10
+    805e05dc:	8f5d                	or	a4,a4,a5
+    805e05de:	00f44783          	lbu	a5,15(s0)
+    805e05e2:	07e2                	slli	a5,a5,0x18
+    805e05e4:	8fd9                	or	a5,a5,a4
+    805e05e6:	2781                	sext.w	a5,a5
+    805e05e8:	4711                	li	a4,4
+    805e05ea:	dee791e3          	bne	a5,a4,805e03cc <main+0x3c8>
+            uart_configure(UART_NUM, *(uint32_t *)cb.command_ptr->data_buf, 8, UART_STOP_1, UART_PARITY_NONE);
+    805e05ee:	480c                	lw	a1,16(s0)
+    805e05f0:	4701                	li	a4,0
+    805e05f2:	4681                	li	a3,0
+    805e05f4:	4621                	li	a2,8
+    805e05f6:	4509                	li	a0,2
+    805e05f8:	00001097          	auipc	ra,0x1
+    805e05fc:	14e080e7          	jalr	334(ra) # 805e1746 <uart_configure>
+            resp->reason = ISPMODE_RET_OK;
+    805e0600:	b131                	j	805e020c <main+0x208>
+            resp->reason = ISPMODE_RET_OK;
+    805e0602:	5781                	li	a5,-32
+            SLIP_send((const void *) resp, 2);
+    805e0604:	4589                	li	a1,2
+    805e0606:	0808                	addi	a0,sp,16
+            resp->reason = ISPMODE_RET_OK;
+    805e0608:	00f108a3          	sb	a5,17(sp)
+            SLIP_send((const void *) resp, 2);
+    805e060c:	00001097          	auipc	ra,0x1
+    805e0610:	92a080e7          	jalr	-1750(ra) # 805e0f36 <SLIP_send>
+            usleep(500);
+    805e0614:	1f400513          	li	a0,500
+    805e0618:	00001097          	auipc	ra,0x1
+    805e061c:	a52080e7          	jalr	-1454(ra) # 805e106a <usleep>
+            sysctl_reset(SYSCTL_RESET_SPI3);
+    805e0620:	4529                	li	a0,10
+    805e0622:	00001097          	auipc	ra,0x1
+    805e0626:	ce0080e7          	jalr	-800(ra) # 805e1302 <sysctl_reset>
+            sysctl_reset(SYSCTL_RESET_UART3);
+    805e062a:	454d                	li	a0,19
+    805e062c:	00001097          	auipc	ra,0x1
+    805e0630:	cd6080e7          	jalr	-810(ra) # 805e1302 <sysctl_reset>
+            sysctl_reset(SYSCTL_RESET_FPIOA);
+    805e0634:	4555                	li	a0,21
+    805e0636:	00001097          	auipc	ra,0x1
+    805e063a:	ccc080e7          	jalr	-820(ra) # 805e1302 <sysctl_reset>
+            asm ("fence.i");
+    805e063e:	0000100f          	fence.i
+            asm ("fence.i");
+    805e0642:	0000100f          	fence.i
+            asm ("jr %0" : : "r"(app_start));
+    805e0646:	4785                	li	a5,1
+    805e0648:	07fe                	slli	a5,a5,0x1f
+    805e064a:	8782                	jr	a5
+            break;
+    805e064c:	b96d                	j	805e0306 <main+0x302>
+
+00000000805e064e <deregister_tm_clones>:
+    805e064e:	00002517          	auipc	a0,0x2
+    805e0652:	0b250513          	addi	a0,a0,178 # 805e2700 <_bss>
+    805e0656:	00002797          	auipc	a5,0x2
+    805e065a:	0aa78793          	addi	a5,a5,170 # 805e2700 <_bss>
+    805e065e:	00a78963          	beq	a5,a0,805e0670 <deregister_tm_clones+0x22>
+    805e0662:	00000337          	lui	t1,0x0
+    805e0666:	00030313          	mv	t1,t1
+    805e066a:	00030363          	beqz	t1,805e0670 <deregister_tm_clones+0x22>
+    805e066e:	8302                	jr	t1
+    805e0670:	8082                	ret
+
+00000000805e0672 <__do_global_dtors_aux>:
+    805e0672:	00002797          	auipc	a5,0x2
+    805e0676:	08e7c783          	lbu	a5,142(a5) # 805e2700 <_bss>
+    805e067a:	ef85                	bnez	a5,805e06b2 <__do_global_dtors_aux+0x40>
+    805e067c:	1141                	addi	sp,sp,-16
+    805e067e:	e406                	sd	ra,8(sp)
+    805e0680:	00000097          	auipc	ra,0x0
+    805e0684:	fce080e7          	jalr	-50(ra) # 805e064e <deregister_tm_clones>
+    805e0688:	000007b7          	lui	a5,0x0
+    805e068c:	00078793          	mv	a5,a5
+    805e0690:	cb89                	beqz	a5,805e06a2 <__do_global_dtors_aux+0x30>
+    805e0692:	00002517          	auipc	a0,0x2
+    805e0696:	02250513          	addi	a0,a0,34 # 805e26b4 <__FRAME_END__>
+    805e069a:	00000097          	auipc	ra,0x0
+    805e069e:	000000e7          	jalr	zero # 0 <_start-0x805e0000>
+    805e06a2:	60a2                	ld	ra,8(sp)
+    805e06a4:	4785                	li	a5,1
+    805e06a6:	00002717          	auipc	a4,0x2
+    805e06aa:	04f70d23          	sb	a5,90(a4) # 805e2700 <_bss>
+    805e06ae:	0141                	addi	sp,sp,16
+    805e06b0:	8082                	ret
+    805e06b2:	8082                	ret
+
+00000000805e06b4 <flash_receive_data>:
+//------------------------------------------------------------------------------------------------------------------
+static enum flash_status_t flash_receive_data(uint8_t *cmd_buff, uint8_t cmd_len, uint8_t *rx_buff, uint32_t rx_len)
+{
+    uint32_t index, fifo_len;
+
+    spi_handle->ctrlr0 = (0x07 << dfs_offset) | (0x03 << tmod_offset);
+    805e06b4:	00002717          	auipc	a4,0x2
+    805e06b8:	04d74703          	lbu	a4,77(a4) # 805e2701 <dfs_offset>
+    805e06bc:	479d                	li	a5,7
+    805e06be:	00002817          	auipc	a6,0x2
+    805e06c2:	05b84803          	lbu	a6,91(a6) # 805e2719 <tmod_offset>
+    805e06c6:	00e797bb          	sllw	a5,a5,a4
+    805e06ca:	470d                	li	a4,3
+    805e06cc:	0107173b          	sllw	a4,a4,a6
+    805e06d0:	8fd9                	or	a5,a5,a4
+    805e06d2:	2781                	sext.w	a5,a5
+    805e06d4:	54000737          	lui	a4,0x54000
+    805e06d8:	c31c                	sw	a5,0(a4)
+    spi_handle->ctrlr1 = rx_len - 1;
+    805e06da:	fff6879b          	addiw	a5,a3,-1
+    805e06de:	c35c                	sw	a5,4(a4)
+    spi_handle->ssienr = 0x01;
+    805e06e0:	4785                	li	a5,1
+    805e06e2:	c71c                	sw	a5,8(a4)
+    while (cmd_len--) {
+    805e06e4:	95aa                	add	a1,a1,a0
+        spi_handle->dr[0] = *cmd_buff++;
+    805e06e6:	540007b7          	lui	a5,0x54000
+    while (cmd_len--) {
+    805e06ea:	04b51363          	bne	a0,a1,805e0730 <flash_receive_data+0x7c>
+    }
+    spi_handle->ser = SPI_SLAVE_SELECT;
+    805e06ee:	540007b7          	lui	a5,0x54000
+    805e06f2:	4705                	li	a4,1
+    805e06f4:	cb98                	sw	a4,16(a5)
+    while (rx_len) {
+        fifo_len = spi_handle->rxflr;
+    805e06f6:	540005b7          	lui	a1,0x54000
+    805e06fa:	51d8                	lw	a4,36(a1)
+    805e06fc:	2701                	sext.w	a4,a4
+        fifo_len = fifo_len < rx_len ? fifo_len : rx_len;
+    805e06fe:	0007079b          	sext.w	a5,a4
+    805e0702:	00e6f463          	bleu	a4,a3,805e070a <flash_receive_data+0x56>
+    805e0706:	0006879b          	sext.w	a5,a3
+        for (index = 0; index < fifo_len; index++) {
+    805e070a:	4701                	li	a4,0
+    805e070c:	0007051b          	sext.w	a0,a4
+    805e0710:	02f56563          	bltu	a0,a5,805e073a <flash_receive_data+0x86>
+    805e0714:	02079713          	slli	a4,a5,0x20
+    805e0718:	9301                	srli	a4,a4,0x20
+            *rx_buff++ = spi_handle->dr[0];
+        }
+        rx_len -= fifo_len;
+    805e071a:	9e9d                	subw	a3,a3,a5
+    805e071c:	963a                	add	a2,a2,a4
+    while (rx_len) {
+    805e071e:	fef1                	bnez	a3,805e06fa <flash_receive_data+0x46>
+    }
+    spi_handle->ser = 0x00;
+    805e0720:	540007b7          	lui	a5,0x54000
+    805e0724:	0007a823          	sw	zero,16(a5) # 54000010 <_start-0x2c5dfff0>
+    spi_handle->ssienr = 0x00;
+    805e0728:	0007a423          	sw	zero,8(a5)
+    return FLASH_OK;
+}
+    805e072c:	4501                	li	a0,0
+    805e072e:	8082                	ret
+        spi_handle->dr[0] = *cmd_buff++;
+    805e0730:	0505                	addi	a0,a0,1
+    805e0732:	fff54703          	lbu	a4,-1(a0)
+    805e0736:	d3b8                	sw	a4,96(a5)
+    805e0738:	bf4d                	j	805e06ea <flash_receive_data+0x36>
+            *rx_buff++ = spi_handle->dr[0];
+    805e073a:	0605a803          	lw	a6,96(a1) # 54000060 <_start-0x2c5dffa0>
+    805e073e:	00e60533          	add	a0,a2,a4
+    805e0742:	0705                	addi	a4,a4,1
+    805e0744:	01050023          	sb	a6,0(a0)
+    805e0748:	b7d1                	j	805e070c <flash_receive_data+0x58>
+
+00000000805e074a <flash_send_data>:
+//---------------------------------------------------------------------------------------------------------------
+static enum flash_status_t flash_send_data(uint8_t *cmd_buff, uint8_t cmd_len, uint8_t *tx_buff, uint32_t tx_len)
+{
+    uint32_t index, fifo_len;
+
+    spi_handle->ctrlr0 = (0x07 << dfs_offset) | (0x01 << tmod_offset);
+    805e074a:	00002717          	auipc	a4,0x2
+    805e074e:	fb774703          	lbu	a4,-73(a4) # 805e2701 <dfs_offset>
+    805e0752:	479d                	li	a5,7
+    805e0754:	00e797bb          	sllw	a5,a5,a4
+    805e0758:	4805                	li	a6,1
+    805e075a:	00002717          	auipc	a4,0x2
+    805e075e:	fbf74703          	lbu	a4,-65(a4) # 805e2719 <tmod_offset>
+    805e0762:	00e8173b          	sllw	a4,a6,a4
+    805e0766:	8fd9                	or	a5,a5,a4
+    805e0768:	2781                	sext.w	a5,a5
+    805e076a:	54000737          	lui	a4,0x54000
+    805e076e:	c31c                	sw	a5,0(a4)
+    spi_handle->ssienr = 0x01;
+    805e0770:	01072423          	sw	a6,8(a4) # 54000008 <_start-0x2c5dfff8>
+    while (cmd_len--) {
+    805e0774:	95aa                	add	a1,a1,a0
+        spi_handle->dr[0] = *cmd_buff++;
+    805e0776:	540007b7          	lui	a5,0x54000
+    while (cmd_len--) {
+    805e077a:	06b51063          	bne	a0,a1,805e07da <flash_send_data+0x90>
+    }
+    fifo_len = 32 - spi_handle->txflr;
+    805e077e:	540007b7          	lui	a5,0x54000
+    805e0782:	5398                	lw	a4,32(a5)
+    805e0784:	02000793          	li	a5,32
+    805e0788:	40e7873b          	subw	a4,a5,a4
+    805e078c:	87ba                	mv	a5,a4
+    fifo_len = fifo_len < tx_len ? fifo_len : tx_len;
+    805e078e:	00e6f463          	bleu	a4,a3,805e0796 <flash_send_data+0x4c>
+    805e0792:	0006879b          	sext.w	a5,a3
+    for (index = 0; index < fifo_len; index++) {
+    805e0796:	4701                	li	a4,0
+        spi_handle->dr[0] = *tx_buff++;
+    805e0798:	54000537          	lui	a0,0x54000
+    for (index = 0; index < fifo_len; index++) {
+    805e079c:	0007059b          	sext.w	a1,a4
+    805e07a0:	04f5e263          	bltu	a1,a5,805e07e4 <flash_send_data+0x9a>
+    805e07a4:	02079713          	slli	a4,a5,0x20
+    805e07a8:	9301                	srli	a4,a4,0x20
+    805e07aa:	963a                	add	a2,a2,a4
+    }
+    tx_len -= fifo_len;
+    805e07ac:	9e9d                	subw	a3,a3,a5
+    spi_handle->ser = SPI_SLAVE_SELECT;
+    805e07ae:	4705                	li	a4,1
+    805e07b0:	540007b7          	lui	a5,0x54000
+    805e07b4:	cb98                	sw	a4,16(a5)
+    while (tx_len) {
+        fifo_len = 32 - spi_handle->txflr;
+    805e07b6:	540005b7          	lui	a1,0x54000
+    805e07ba:	02000513          	li	a0,32
+    while (tx_len) {
+    805e07be:	ea95                	bnez	a3,805e07f2 <flash_send_data+0xa8>
+        for (index = 0; index < fifo_len; index++) {
+            spi_handle->dr[0] = *tx_buff++;
+        }
+        tx_len -= fifo_len;
+    }
+    while ((spi_handle->sr & 0x05) != 0x04) {
+    805e07c0:	540007b7          	lui	a5,0x54000
+    805e07c4:	4691                	li	a3,4
+    805e07c6:	5798                	lw	a4,40(a5)
+    805e07c8:	8b15                	andi	a4,a4,5
+    805e07ca:	fed71ee3          	bne	a4,a3,805e07c6 <flash_send_data+0x7c>
+        ;
+    }
+    spi_handle->ser = 0x00;
+    805e07ce:	0007a823          	sw	zero,16(a5) # 54000010 <_start-0x2c5dfff0>
+    spi_handle->ssienr = 0x00;
+    805e07d2:	0007a423          	sw	zero,8(a5)
+    return FLASH_OK;
+}
+    805e07d6:	4501                	li	a0,0
+    805e07d8:	8082                	ret
+        spi_handle->dr[0] = *cmd_buff++;
+    805e07da:	0505                	addi	a0,a0,1
+    805e07dc:	fff54703          	lbu	a4,-1(a0) # 53ffffff <_start-0x2c5e0001>
+    805e07e0:	d3b8                	sw	a4,96(a5)
+    805e07e2:	bf61                	j	805e077a <flash_send_data+0x30>
+        spi_handle->dr[0] = *tx_buff++;
+    805e07e4:	00e605b3          	add	a1,a2,a4
+    805e07e8:	0005c583          	lbu	a1,0(a1) # 54000000 <_start-0x2c5e0000>
+    805e07ec:	0705                	addi	a4,a4,1
+    805e07ee:	d12c                	sw	a1,96(a0)
+    805e07f0:	b775                	j	805e079c <flash_send_data+0x52>
+        fifo_len = 32 - spi_handle->txflr;
+    805e07f2:	5198                	lw	a4,32(a1)
+        fifo_len = fifo_len < tx_len ? fifo_len : tx_len;
+    805e07f4:	0006879b          	sext.w	a5,a3
+        fifo_len = 32 - spi_handle->txflr;
+    805e07f8:	40e5083b          	subw	a6,a0,a4
+        fifo_len = fifo_len < tx_len ? fifo_len : tx_len;
+    805e07fc:	00d87463          	bleu	a3,a6,805e0804 <flash_send_data+0xba>
+    805e0800:	0008079b          	sext.w	a5,a6
+        for (index = 0; index < fifo_len; index++) {
+    805e0804:	4701                	li	a4,0
+    805e0806:	0007081b          	sext.w	a6,a4
+    805e080a:	00f86863          	bltu	a6,a5,805e081a <flash_send_data+0xd0>
+    805e080e:	02079713          	slli	a4,a5,0x20
+    805e0812:	9301                	srli	a4,a4,0x20
+    805e0814:	963a                	add	a2,a2,a4
+        tx_len -= fifo_len;
+    805e0816:	9e9d                	subw	a3,a3,a5
+    805e0818:	b75d                	j	805e07be <flash_send_data+0x74>
+            spi_handle->dr[0] = *tx_buff++;
+    805e081a:	00e60833          	add	a6,a2,a4
+    805e081e:	00084803          	lbu	a6,0(a6)
+    805e0822:	0705                	addi	a4,a4,1
+    805e0824:	0705a023          	sw	a6,96(a1)
+    805e0828:	bff9                	j	805e0806 <flash_send_data+0xbc>
+
+00000000805e082a <flash_write_enable>:
+    return FLASH_OK;
+}
+
+//-------------------------------------------------
+static enum flash_status_t flash_write_enable(void)
+{
+    805e082a:	1101                	addi	sp,sp,-32
+    uint8_t cmd[1] = {WRITE_ENABLE};
+    805e082c:	4799                	li	a5,6
+
+    flash_send_data(cmd, 1, 0, 0);
+    805e082e:	0028                	addi	a0,sp,8
+    805e0830:	4681                	li	a3,0
+    805e0832:	4601                	li	a2,0
+    805e0834:	4585                	li	a1,1
+{
+    805e0836:	ec06                	sd	ra,24(sp)
+    uint8_t cmd[1] = {WRITE_ENABLE};
+    805e0838:	00f10423          	sb	a5,8(sp)
+    flash_send_data(cmd, 1, 0, 0);
+    805e083c:	00000097          	auipc	ra,0x0
+    805e0840:	f0e080e7          	jalr	-242(ra) # 805e074a <flash_send_data>
+    return FLASH_OK;
+}
+    805e0844:	60e2                	ld	ra,24(sp)
+    805e0846:	4501                	li	a0,0
+    805e0848:	6105                	addi	sp,sp,32
+    805e084a:	8082                	ret
+
+00000000805e084c <flash_read_status_reg1>:
+    return FLASH_OK;
+}
+
+//-----------------------------------------------------------
+static enum flash_status_t flash_read_status_reg1(uint8_t *reg_data)
+{
+    805e084c:	1101                	addi	sp,sp,-32
+    805e084e:	e822                	sd	s0,16(sp)
+    uint8_t cmd[1] = {READ_REG1};
+    805e0850:	4795                	li	a5,5
+{
+    805e0852:	842a                	mv	s0,a0
+    uint8_t data[1];
+
+    flash_receive_data(cmd, 1, data, 1);
+    805e0854:	0030                	addi	a2,sp,8
+    805e0856:	850a                	mv	a0,sp
+    805e0858:	4685                	li	a3,1
+    805e085a:	4585                	li	a1,1
+{
+    805e085c:	ec06                	sd	ra,24(sp)
+    uint8_t cmd[1] = {READ_REG1};
+    805e085e:	00f10023          	sb	a5,0(sp)
+    flash_receive_data(cmd, 1, data, 1);
+    805e0862:	00000097          	auipc	ra,0x0
+    805e0866:	e52080e7          	jalr	-430(ra) # 805e06b4 <flash_receive_data>
+    *reg_data = data[0];
+    805e086a:	00814783          	lbu	a5,8(sp)
+    return FLASH_OK;
+}
+    805e086e:	60e2                	ld	ra,24(sp)
+    805e0870:	4501                	li	a0,0
+    *reg_data = data[0];
+    805e0872:	00f40023          	sb	a5,0(s0)
+}
+    805e0876:	6442                	ld	s0,16(sp)
+    805e0878:	6105                	addi	sp,sp,32
+    805e087a:	8082                	ret
+
+00000000805e087c <flash_read_status_reg2>:
+
+//------------------------------------------------------------------
+static enum flash_status_t flash_read_status_reg2(uint8_t *reg_data)
+{
+    805e087c:	1101                	addi	sp,sp,-32
+    805e087e:	e822                	sd	s0,16(sp)
+    uint8_t cmd[1] = {READ_REG2};
+    805e0880:	03500793          	li	a5,53
+{
+    805e0884:	842a                	mv	s0,a0
+    uint8_t data[1];
+
+    flash_receive_data(cmd, 1, data, 1);
+    805e0886:	0030                	addi	a2,sp,8
+    805e0888:	850a                	mv	a0,sp
+    805e088a:	4685                	li	a3,1
+    805e088c:	4585                	li	a1,1
+{
+    805e088e:	ec06                	sd	ra,24(sp)
+    uint8_t cmd[1] = {READ_REG2};
+    805e0890:	00f10023          	sb	a5,0(sp)
+    flash_receive_data(cmd, 1, data, 1);
+    805e0894:	00000097          	auipc	ra,0x0
+    805e0898:	e20080e7          	jalr	-480(ra) # 805e06b4 <flash_receive_data>
+    *reg_data = data[0];
+    805e089c:	00814783          	lbu	a5,8(sp)
+    return FLASH_OK;
+}
+    805e08a0:	60e2                	ld	ra,24(sp)
+    805e08a2:	4501                	li	a0,0
+    *reg_data = data[0];
+    805e08a4:	00f40023          	sb	a5,0(s0)
+}
+    805e08a8:	6442                	ld	s0,16(sp)
+    805e08aa:	6105                	addi	sp,sp,32
+    805e08ac:	8082                	ret
+
+00000000805e08ae <flash_receive_data_enhanced.constprop.1>:
+    spi_handle->ctrlr1 = rx_len - 1;
+    805e08ae:	540007b7          	lui	a5,0x54000
+    805e08b2:	fff6071b          	addiw	a4,a2,-1
+    805e08b6:	c3d8                	sw	a4,4(a5)
+    spi_handle->ssienr = 0x01;
+    805e08b8:	4705                	li	a4,1
+    805e08ba:	c798                	sw	a4,8(a5)
+        spi_handle->dr[0] = *cmd_buff++;
+    805e08bc:	4114                	lw	a3,0(a0)
+    805e08be:	d3b4                	sw	a3,96(a5)
+    805e08c0:	4154                	lw	a3,4(a0)
+    805e08c2:	d3b4                	sw	a3,96(a5)
+    spi_handle->ser = SPI_SLAVE_SELECT;
+    805e08c4:	cb98                	sw	a4,16(a5)
+        fifo_len = spi_handle->rxflr;
+    805e08c6:	540006b7          	lui	a3,0x54000
+    805e08ca:	52d8                	lw	a4,36(a3)
+        fifo_len = fifo_len < rx_len ? fifo_len : rx_len;
+    805e08cc:	0006079b          	sext.w	a5,a2
+        fifo_len = spi_handle->rxflr;
+    805e08d0:	2701                	sext.w	a4,a4
+        fifo_len = fifo_len < rx_len ? fifo_len : rx_len;
+    805e08d2:	00c77463          	bleu	a2,a4,805e08da <flash_receive_data_enhanced.constprop.1+0x2c>
+    805e08d6:	0007079b          	sext.w	a5,a4
+    805e08da:	4701                	li	a4,0
+        for (index = 0; index < fifo_len; index++) {
+    805e08dc:	0007051b          	sext.w	a0,a4
+    805e08e0:	02f56063          	bltu	a0,a5,805e0900 <flash_receive_data_enhanced.constprop.1+0x52>
+    805e08e4:	02079713          	slli	a4,a5,0x20
+    805e08e8:	9301                	srli	a4,a4,0x20
+        rx_len -= fifo_len;
+    805e08ea:	9e1d                	subw	a2,a2,a5
+    805e08ec:	95ba                	add	a1,a1,a4
+    while (rx_len) {
+    805e08ee:	fe71                	bnez	a2,805e08ca <flash_receive_data_enhanced.constprop.1+0x1c>
+    spi_handle->ser = 0x00;
+    805e08f0:	540007b7          	lui	a5,0x54000
+    805e08f4:	0007a823          	sw	zero,16(a5) # 54000010 <_start-0x2c5dfff0>
+    spi_handle->ssienr = 0x00;
+    805e08f8:	0007a423          	sw	zero,8(a5)
+}
+    805e08fc:	4501                	li	a0,0
+    805e08fe:	8082                	ret
+            *rx_buff++ = spi_handle->dr[0];
+    805e0900:	0606a803          	lw	a6,96(a3) # 54000060 <_start-0x2c5dffa0>
+    805e0904:	00e58533          	add	a0,a1,a4
+    805e0908:	0705                	addi	a4,a4,1
+    805e090a:	01050023          	sb	a6,0(a0)
+    805e090e:	b7f9                	j	805e08dc <flash_receive_data_enhanced.constprop.1+0x2e>
+
+00000000805e0910 <flash_stand_read_data>:
+enum flash_status_t flash_read_data(uint32_t addr, uint8_t *data_buf, uint32_t length, enum flash_read_t mode)
+{
+    uint32_t write_len;
+
+    while (length) {
+        write_len = length > 32 ? 32 : length;
+    805e0910:	02000713          	li	a4,32
+    while (length) {
+    805e0914:	e219                	bnez	a2,805e091a <flash_stand_read_data+0xa>
+
+//-------------------------------------------------------------------------------------------------
+static enum flash_status_t flash_stand_read_data(uint32_t addr, uint8_t *data_buf, uint32_t length)
+{
+    return flash_read_data(addr, data_buf, length, FLASH_STANDARD_FAST);
+}
+    805e0916:	4501                	li	a0,0
+    805e0918:	8082                	ret
+        write_len = length > 32 ? 32 : length;
+    805e091a:	87b2                	mv	a5,a2
+    805e091c:	00c77463          	bleu	a2,a4,805e0924 <flash_stand_read_data+0x14>
+    805e0920:	02000793          	li	a5,32
+        length -= write_len;
+    805e0924:	9e1d                	subw	a2,a2,a5
+    805e0926:	b7fd                	j	805e0914 <flash_stand_read_data+0x4>
+
+00000000805e0928 <flash_init>:
+{
+    805e0928:	1101                	addi	sp,sp,-32
+    uint8_t cmd[2] = {0xFF, 0xFF};
+    805e092a:	57fd                	li	a5,-1
+    sysctl_reset(SYSCTL_RESET_SPI3);
+    805e092c:	4529                	li	a0,10
+{
+    805e092e:	ec06                	sd	ra,24(sp)
+    uint8_t cmd[2] = {0xFF, 0xFF};
+    805e0930:	00f11423          	sh	a5,8(sp)
+    sysctl_reset(SYSCTL_RESET_SPI3);
+    805e0934:	00001097          	auipc	ra,0x1
+    805e0938:	9ce080e7          	jalr	-1586(ra) # 805e1302 <sysctl_reset>
+    sysctl_clock_enable(SYSCTL_CLOCK_SPI3);
+    805e093c:	4549                	li	a0,18
+    805e093e:	00001097          	auipc	ra,0x1
+    805e0942:	9f2080e7          	jalr	-1550(ra) # 805e1330 <sysctl_clock_enable>
+    sysctl_clock_set_threshold(SYSCTL_THRESHOLD_SPI3, 0);
+    805e0946:	4581                	li	a1,0
+    805e0948:	4531                	li	a0,12
+    805e094a:	00001097          	auipc	ra,0x1
+    805e094e:	a52080e7          	jalr	-1454(ra) # 805e139c <sysctl_clock_set_threshold>
+    dfs_offset = 0;
+    805e0952:	00002797          	auipc	a5,0x2
+    805e0956:	da0787a3          	sb	zero,-593(a5) # 805e2701 <dfs_offset>
+    tmod_offset = 10;
+    805e095a:	47a9                	li	a5,10
+    805e095c:	00002717          	auipc	a4,0x2
+    805e0960:	daf70ea3          	sb	a5,-579(a4) # 805e2719 <tmod_offset>
+    frf_offset = 22;
+    805e0964:	47d9                	li	a5,22
+    805e0966:	00002717          	auipc	a4,0x2
+    805e096a:	daf70923          	sb	a5,-590(a4) # 805e2718 <frf_offset>
+    spi_handle->baudr = 0x02;
+    805e096e:	4709                	li	a4,2
+    805e0970:	540007b7          	lui	a5,0x54000
+    805e0974:	cbd8                	sw	a4,20(a5)
+    spi_handle->imr = 0x00;
+    805e0976:	0207a623          	sw	zero,44(a5) # 5400002c <_start-0x2c5dffd4>
+    spi_handle->ser = 0x00;
+    805e097a:	0007a823          	sw	zero,16(a5)
+    spi_handle->ssienr = 0x00;
+    805e097e:	0007a423          	sw	zero,8(a5)
+    flash_page_program_fun = flash_page_program;
+    805e0982:	00000797          	auipc	a5,0x0
+    805e0986:	09e78793          	addi	a5,a5,158 # 805e0a20 <flash_page_program>
+    805e098a:	00002717          	auipc	a4,0x2
+    805e098e:	d6f73f23          	sd	a5,-642(a4) # 805e2708 <flash_page_program_fun>
+    flash_send_data(cmd, 2, 0, 0);
+    805e0992:	0028                	addi	a0,sp,8
+    flash_read_fun = flash_stand_read_data;
+    805e0994:	00000797          	auipc	a5,0x0
+    805e0998:	f7c78793          	addi	a5,a5,-132 # 805e0910 <flash_stand_read_data>
+    flash_send_data(cmd, 2, 0, 0);
+    805e099c:	4681                	li	a3,0
+    805e099e:	4601                	li	a2,0
+    805e09a0:	4589                	li	a1,2
+    flash_read_fun = flash_stand_read_data;
+    805e09a2:	00002717          	auipc	a4,0x2
+    805e09a6:	d6f73723          	sd	a5,-658(a4) # 805e2710 <flash_read_fun>
+    flash_send_data(cmd, 2, 0, 0);
+    805e09aa:	00000097          	auipc	ra,0x0
+    805e09ae:	da0080e7          	jalr	-608(ra) # 805e074a <flash_send_data>
+}
+    805e09b2:	60e2                	ld	ra,24(sp)
+    805e09b4:	4501                	li	a0,0
+    805e09b6:	6105                	addi	sp,sp,32
+    805e09b8:	8082                	ret
+
+00000000805e09ba <flash_read_jedec_id>:
+{
+    805e09ba:	1101                	addi	sp,sp,-32
+    uint8_t cmd[1] = {READ_JEDEC_ID};
+    805e09bc:	f9f00793          	li	a5,-97
+    flash_receive_data(cmd, 1, jedec_id, 3);
+    805e09c0:	862a                	mv	a2,a0
+    805e09c2:	468d                	li	a3,3
+    805e09c4:	0028                	addi	a0,sp,8
+    805e09c6:	4585                	li	a1,1
+{
+    805e09c8:	ec06                	sd	ra,24(sp)
+    uint8_t cmd[1] = {READ_JEDEC_ID};
+    805e09ca:	00f10423          	sb	a5,8(sp)
+    flash_receive_data(cmd, 1, jedec_id, 3);
+    805e09ce:	00000097          	auipc	ra,0x0
+    805e09d2:	ce6080e7          	jalr	-794(ra) # 805e06b4 <flash_receive_data>
+}
+    805e09d6:	60e2                	ld	ra,24(sp)
+    805e09d8:	4501                	li	a0,0
+    805e09da:	6105                	addi	sp,sp,32
+    805e09dc:	8082                	ret
+
+00000000805e09de <flash_read_unique>:
+{
+    805e09de:	1101                	addi	sp,sp,-32
+    uint8_t cmd[5] = {READ_UNIQUE, 0x00, 0x00, 0x00, 0x00};
+    805e09e0:	04b00793          	li	a5,75
+    flash_receive_data(cmd, 5, unique_id, 8);
+    805e09e4:	862a                	mv	a2,a0
+    805e09e6:	46a1                	li	a3,8
+    805e09e8:	0028                	addi	a0,sp,8
+    805e09ea:	4595                	li	a1,5
+{
+    805e09ec:	ec06                	sd	ra,24(sp)
+    uint8_t cmd[5] = {READ_UNIQUE, 0x00, 0x00, 0x00, 0x00};
+    805e09ee:	c43e                	sw	a5,8(sp)
+    805e09f0:	00010623          	sb	zero,12(sp)
+    flash_receive_data(cmd, 5, unique_id, 8);
+    805e09f4:	00000097          	auipc	ra,0x0
+    805e09f8:	cc0080e7          	jalr	-832(ra) # 805e06b4 <flash_receive_data>
+}
+    805e09fc:	60e2                	ld	ra,24(sp)
+    805e09fe:	4501                	li	a0,0
+    805e0a00:	6105                	addi	sp,sp,32
+    805e0a02:	8082                	ret
+
+00000000805e0a04 <flash_is_busy>:
+{
+    805e0a04:	1101                	addi	sp,sp,-32
+    flash_read_status_reg1(&status);
+    805e0a06:	00f10513          	addi	a0,sp,15
+{
+    805e0a0a:	ec06                	sd	ra,24(sp)
+    flash_read_status_reg1(&status);
+    805e0a0c:	00000097          	auipc	ra,0x0
+    805e0a10:	e40080e7          	jalr	-448(ra) # 805e084c <flash_read_status_reg1>
+    if (status & REG1_BUSY_MASK)
+    805e0a14:	00f14503          	lbu	a0,15(sp)
+}
+    805e0a18:	60e2                	ld	ra,24(sp)
+    805e0a1a:	8905                	andi	a0,a0,1
+    805e0a1c:	6105                	addi	sp,sp,32
+    805e0a1e:	8082                	ret
+
+00000000805e0a20 <flash_page_program>:
+{
+    805e0a20:	7179                	addi	sp,sp,-48
+    uint8_t cmd[4] = {PAGE_PROGRAM};
+    805e0a22:	4789                	li	a5,2
+    805e0a24:	00f10c23          	sb	a5,24(sp)
+    cmd[1] = (uint8_t)(addr >> 16);
+    805e0a28:	0105579b          	srliw	a5,a0,0x10
+    805e0a2c:	00f10ca3          	sb	a5,25(sp)
+    cmd[2] = (uint8_t)(addr >> 8);
+    805e0a30:	00855793          	srli	a5,a0,0x8
+    805e0a34:	0ff7f793          	andi	a5,a5,255
+    805e0a38:	0522                	slli	a0,a0,0x8
+    805e0a3a:	8d5d                	or	a0,a0,a5
+{
+    805e0a3c:	f406                	sd	ra,40(sp)
+    805e0a3e:	f022                	sd	s0,32(sp)
+    805e0a40:	e42e                	sd	a1,8(sp)
+    805e0a42:	e032                	sd	a2,0(sp)
+    cmd[2] = (uint8_t)(addr >> 8);
+    805e0a44:	00a11d23          	sh	a0,26(sp)
+    flash_write_enable();
+    805e0a48:	00000097          	auipc	ra,0x0
+    805e0a4c:	de2080e7          	jalr	-542(ra) # 805e082a <flash_write_enable>
+    flash_send_data(cmd, 4, data_buf, length);
+    805e0a50:	65a2                	ld	a1,8(sp)
+    805e0a52:	6682                	ld	a3,0(sp)
+    805e0a54:	0828                	addi	a0,sp,24
+    805e0a56:	862e                	mv	a2,a1
+    805e0a58:	4591                	li	a1,4
+    805e0a5a:	00000097          	auipc	ra,0x0
+    805e0a5e:	cf0080e7          	jalr	-784(ra) # 805e074a <flash_send_data>
+    while (flash_is_busy() == FLASH_BUSY) {
+    805e0a62:	4405                	li	s0,1
+    805e0a64:	00000097          	auipc	ra,0x0
+    805e0a68:	fa0080e7          	jalr	-96(ra) # 805e0a04 <flash_is_busy>
+    805e0a6c:	2501                	sext.w	a0,a0
+    805e0a6e:	fe850be3          	beq	a0,s0,805e0a64 <flash_page_program+0x44>
+}
+    805e0a72:	70a2                	ld	ra,40(sp)
+    805e0a74:	7402                	ld	s0,32(sp)
+    805e0a76:	4501                	li	a0,0
+    805e0a78:	6145                	addi	sp,sp,48
+    805e0a7a:	8082                	ret
+
+00000000805e0a7c <flash_quad_page_program>:
+{
+    805e0a7c:	1101                	addi	sp,sp,-32
+    805e0a7e:	e822                	sd	s0,16(sp)
+    805e0a80:	e42e                	sd	a1,8(sp)
+    805e0a82:	842a                	mv	s0,a0
+    805e0a84:	e032                	sd	a2,0(sp)
+    805e0a86:	ec06                	sd	ra,24(sp)
+    flash_write_enable();
+    805e0a88:	00000097          	auipc	ra,0x0
+    805e0a8c:	da2080e7          	jalr	-606(ra) # 805e082a <flash_write_enable>
+    spi_handle->ctrlr0 = (0x01 << tmod_offset) | (0x07 << dfs_offset) | (0x02 << frf_offset);
+    805e0a90:	00002517          	auipc	a0,0x2
+    805e0a94:	c7154503          	lbu	a0,-911(a0) # 805e2701 <dfs_offset>
+    805e0a98:	00002797          	auipc	a5,0x2
+    805e0a9c:	c817c783          	lbu	a5,-895(a5) # 805e2719 <tmod_offset>
+    805e0aa0:	4685                	li	a3,1
+    805e0aa2:	471d                	li	a4,7
+    805e0aa4:	00a7173b          	sllw	a4,a4,a0
+    805e0aa8:	00f697bb          	sllw	a5,a3,a5
+    805e0aac:	00002517          	auipc	a0,0x2
+    805e0ab0:	c6c54503          	lbu	a0,-916(a0) # 805e2718 <frf_offset>
+    805e0ab4:	8fd9                	or	a5,a5,a4
+    805e0ab6:	4709                	li	a4,2
+    805e0ab8:	00a7173b          	sllw	a4,a4,a0
+    805e0abc:	8fd9                	or	a5,a5,a4
+    805e0abe:	2781                	sext.w	a5,a5
+    805e0ac0:	54000737          	lui	a4,0x54000
+    805e0ac4:	c31c                	sw	a5,0(a4)
+    spi_handle->spi_ctrlr0 = (0x06 << 2) | (0x02 << 8);
+    805e0ac6:	21800793          	li	a5,536
+    805e0aca:	0ef72a23          	sw	a5,244(a4) # 540000f4 <_start-0x2c5dff0c>
+    spi_handle->ssienr = 0x01;
+    805e0ace:	c714                	sw	a3,8(a4)
+        spi_handle->dr[0] = *cmd_buff++;
+    805e0ad0:	03200793          	li	a5,50
+    805e0ad4:	d33c                	sw	a5,96(a4)
+    805e0ad6:	d320                	sw	s0,96(a4)
+    fifo_len = 32 - spi_handle->txflr;
+    805e0ad8:	531c                	lw	a5,32(a4)
+    fifo_len = fifo_len < tx_len ? fifo_len : tx_len;
+    805e0ada:	6602                	ld	a2,0(sp)
+    fifo_len = 32 - spi_handle->txflr;
+    805e0adc:	02000713          	li	a4,32
+    805e0ae0:	40f706bb          	subw	a3,a4,a5
+    fifo_len = fifo_len < tx_len ? fifo_len : tx_len;
+    805e0ae4:	65a2                	ld	a1,8(sp)
+    805e0ae6:	0006079b          	sext.w	a5,a2
+    805e0aea:	00c6f463          	bleu	a2,a3,805e0af2 <flash_quad_page_program+0x76>
+    805e0aee:	0006879b          	sext.w	a5,a3
+    805e0af2:	4701                	li	a4,0
+        spi_handle->dr[0] = *tx_buff++;
+    805e0af4:	54000537          	lui	a0,0x54000
+    for (index = 0; index < fifo_len; index++) {
+    805e0af8:	0007069b          	sext.w	a3,a4
+    805e0afc:	04f6e863          	bltu	a3,a5,805e0b4c <flash_quad_page_program+0xd0>
+    805e0b00:	02079713          	slli	a4,a5,0x20
+    805e0b04:	9301                	srli	a4,a4,0x20
+    805e0b06:	95ba                	add	a1,a1,a4
+    tx_len -= fifo_len;
+    805e0b08:	9e1d                	subw	a2,a2,a5
+    spi_handle->ser = SPI_SLAVE_SELECT;
+    805e0b0a:	4705                	li	a4,1
+    805e0b0c:	540007b7          	lui	a5,0x54000
+    805e0b10:	cb98                	sw	a4,16(a5)
+        fifo_len = 32 - spi_handle->txflr;
+    805e0b12:	540006b7          	lui	a3,0x54000
+    805e0b16:	02000513          	li	a0,32
+    while (tx_len) {
+    805e0b1a:	e221                	bnez	a2,805e0b5a <flash_quad_page_program+0xde>
+    while ((spi_handle->sr & 0x05) != 0x04) {
+    805e0b1c:	540007b7          	lui	a5,0x54000
+    805e0b20:	4691                	li	a3,4
+    805e0b22:	5798                	lw	a4,40(a5)
+    805e0b24:	8b15                	andi	a4,a4,5
+    805e0b26:	fed71ee3          	bne	a4,a3,805e0b22 <flash_quad_page_program+0xa6>
+    spi_handle->ser = 0x00;
+    805e0b2a:	0007a823          	sw	zero,16(a5) # 54000010 <_start-0x2c5dfff0>
+    spi_handle->ssienr = 0x00;
+    805e0b2e:	0007a423          	sw	zero,8(a5)
+    while (flash_is_busy() == FLASH_BUSY)
+    805e0b32:	4405                	li	s0,1
+    805e0b34:	00000097          	auipc	ra,0x0
+    805e0b38:	ed0080e7          	jalr	-304(ra) # 805e0a04 <flash_is_busy>
+    805e0b3c:	2501                	sext.w	a0,a0
+    805e0b3e:	fe850be3          	beq	a0,s0,805e0b34 <flash_quad_page_program+0xb8>
+}
+    805e0b42:	60e2                	ld	ra,24(sp)
+    805e0b44:	6442                	ld	s0,16(sp)
+    805e0b46:	4501                	li	a0,0
+    805e0b48:	6105                	addi	sp,sp,32
+    805e0b4a:	8082                	ret
+        spi_handle->dr[0] = *tx_buff++;
+    805e0b4c:	00e586b3          	add	a3,a1,a4
+    805e0b50:	0006c683          	lbu	a3,0(a3) # 54000000 <_start-0x2c5e0000>
+    805e0b54:	0705                	addi	a4,a4,1
+    805e0b56:	d134                	sw	a3,96(a0)
+    805e0b58:	b745                	j	805e0af8 <flash_quad_page_program+0x7c>
+        fifo_len = 32 - spi_handle->txflr;
+    805e0b5a:	529c                	lw	a5,32(a3)
+    805e0b5c:	40f5073b          	subw	a4,a0,a5
+    805e0b60:	87ba                	mv	a5,a4
+        fifo_len = fifo_len < tx_len ? fifo_len : tx_len;
+    805e0b62:	00e67463          	bleu	a4,a2,805e0b6a <flash_quad_page_program+0xee>
+    805e0b66:	0006079b          	sext.w	a5,a2
+    805e0b6a:	4701                	li	a4,0
+        for (index = 0; index < fifo_len; index++) {
+    805e0b6c:	0007081b          	sext.w	a6,a4
+    805e0b70:	00f86863          	bltu	a6,a5,805e0b80 <flash_quad_page_program+0x104>
+    805e0b74:	02079713          	slli	a4,a5,0x20
+    805e0b78:	9301                	srli	a4,a4,0x20
+    805e0b7a:	95ba                	add	a1,a1,a4
+        tx_len -= fifo_len;
+    805e0b7c:	9e1d                	subw	a2,a2,a5
+    805e0b7e:	bf71                	j	805e0b1a <flash_quad_page_program+0x9e>
+            spi_handle->dr[0] = *tx_buff++;
+    805e0b80:	00e58833          	add	a6,a1,a4
+    805e0b84:	00084803          	lbu	a6,0(a6)
+    805e0b88:	0705                	addi	a4,a4,1
+    805e0b8a:	0706a023          	sw	a6,96(a3)
+    805e0b8e:	bff9                	j	805e0b6c <flash_quad_page_program+0xf0>
+
+00000000805e0b90 <flash_sector_erase>:
+{
+    805e0b90:	1101                	addi	sp,sp,-32
+    uint8_t cmd[4] = {SECTOR_ERASE};
+    805e0b92:	02000793          	li	a5,32
+    805e0b96:	00f10423          	sb	a5,8(sp)
+    cmd[1] = (uint8_t)(addr >> 16);
+    805e0b9a:	0105579b          	srliw	a5,a0,0x10
+    805e0b9e:	00f104a3          	sb	a5,9(sp)
+    cmd[2] = (uint8_t)(addr >> 8);
+    805e0ba2:	00855793          	srli	a5,a0,0x8
+    805e0ba6:	0ff7f793          	andi	a5,a5,255
+    805e0baa:	0522                	slli	a0,a0,0x8
+    805e0bac:	8d5d                	or	a0,a0,a5
+{
+    805e0bae:	ec06                	sd	ra,24(sp)
+    cmd[2] = (uint8_t)(addr >> 8);
+    805e0bb0:	00a11523          	sh	a0,10(sp)
+    flash_write_enable();
+    805e0bb4:	00000097          	auipc	ra,0x0
+    805e0bb8:	c76080e7          	jalr	-906(ra) # 805e082a <flash_write_enable>
+    flash_send_data(cmd, 4, 0, 0);
+    805e0bbc:	0028                	addi	a0,sp,8
+    805e0bbe:	4681                	li	a3,0
+    805e0bc0:	4601                	li	a2,0
+    805e0bc2:	4591                	li	a1,4
+    805e0bc4:	00000097          	auipc	ra,0x0
+    805e0bc8:	b86080e7          	jalr	-1146(ra) # 805e074a <flash_send_data>
+}
+    805e0bcc:	60e2                	ld	ra,24(sp)
+    805e0bce:	4501                	li	a0,0
+    805e0bd0:	6105                	addi	sp,sp,32
+    805e0bd2:	8082                	ret
+
+00000000805e0bd4 <flash_64k_block_erase>:
+{
+    805e0bd4:	1101                	addi	sp,sp,-32
+    uint8_t cmd[4] = {BLOCK_64K_ERASE};
+    805e0bd6:	fd800793          	li	a5,-40
+    805e0bda:	00f10423          	sb	a5,8(sp)
+    cmd[1] = (uint8_t)(addr >> 16);
+    805e0bde:	0105579b          	srliw	a5,a0,0x10
+    805e0be2:	00f104a3          	sb	a5,9(sp)
+    cmd[2] = (uint8_t)(addr >> 8);
+    805e0be6:	00855793          	srli	a5,a0,0x8
+    805e0bea:	0ff7f793          	andi	a5,a5,255
+    805e0bee:	0522                	slli	a0,a0,0x8
+    805e0bf0:	8d5d                	or	a0,a0,a5
+{
+    805e0bf2:	ec06                	sd	ra,24(sp)
+    cmd[2] = (uint8_t)(addr >> 8);
+    805e0bf4:	00a11523          	sh	a0,10(sp)
+    flash_write_enable();
+    805e0bf8:	00000097          	auipc	ra,0x0
+    805e0bfc:	c32080e7          	jalr	-974(ra) # 805e082a <flash_write_enable>
+    flash_send_data(cmd, 4, 0, 0);
+    805e0c00:	0028                	addi	a0,sp,8
+    805e0c02:	4681                	li	a3,0
+    805e0c04:	4601                	li	a2,0
+    805e0c06:	4591                	li	a1,4
+    805e0c08:	00000097          	auipc	ra,0x0
+    805e0c0c:	b42080e7          	jalr	-1214(ra) # 805e074a <flash_send_data>
+}
+    805e0c10:	60e2                	ld	ra,24(sp)
+    805e0c12:	4501                	li	a0,0
+    805e0c14:	6105                	addi	sp,sp,32
+    805e0c16:	8082                	ret
+
+00000000805e0c18 <flash_chip_erase>:
+{
+    805e0c18:	1101                	addi	sp,sp,-32
+    uint8_t cmd[1] = {CHIP_ERASE};
+    805e0c1a:	06000793          	li	a5,96
+{
+    805e0c1e:	ec06                	sd	ra,24(sp)
+    uint8_t cmd[1] = {CHIP_ERASE};
+    805e0c20:	00f10423          	sb	a5,8(sp)
+    flash_write_enable();
+    805e0c24:	00000097          	auipc	ra,0x0
+    805e0c28:	c06080e7          	jalr	-1018(ra) # 805e082a <flash_write_enable>
+    flash_send_data(cmd, 1, 0, 0);
+    805e0c2c:	0028                	addi	a0,sp,8
+    805e0c2e:	4681                	li	a3,0
+    805e0c30:	4601                	li	a2,0
+    805e0c32:	4585                	li	a1,1
+    805e0c34:	00000097          	auipc	ra,0x0
+    805e0c38:	b16080e7          	jalr	-1258(ra) # 805e074a <flash_send_data>
+}
+    805e0c3c:	60e2                	ld	ra,24(sp)
+    805e0c3e:	4501                	li	a0,0
+    805e0c40:	6105                	addi	sp,sp,32
+    805e0c42:	8082                	ret
+
+00000000805e0c44 <flash_enable_quad_mode>:
+{
+    805e0c44:	1101                	addi	sp,sp,-32
+    flash_read_status_reg2(&reg2_data);
+    805e0c46:	00710513          	addi	a0,sp,7
+{
+    805e0c4a:	ec06                	sd	ra,24(sp)
+    flash_read_status_reg2(&reg2_data);
+    805e0c4c:	00000097          	auipc	ra,0x0
+    805e0c50:	c30080e7          	jalr	-976(ra) # 805e087c <flash_read_status_reg2>
+    if (!(reg2_data & REG2_QUAL_MASK)) {
+    805e0c54:	00714783          	lbu	a5,7(sp)
+    805e0c58:	0027f713          	andi	a4,a5,2
+    805e0c5c:	e331                	bnez	a4,805e0ca0 <flash_enable_quad_mode+0x5c>
+        reg2_data |= REG2_QUAL_MASK;
+    805e0c5e:	0027e793          	ori	a5,a5,2
+        flash_read_status_reg1(&reg1_data);
+    805e0c62:	00610513          	addi	a0,sp,6
+        reg2_data |= REG2_QUAL_MASK;
+    805e0c66:	00f103a3          	sb	a5,7(sp)
+        flash_read_status_reg1(&reg1_data);
+    805e0c6a:	00000097          	auipc	ra,0x0
+    805e0c6e:	be2080e7          	jalr	-1054(ra) # 805e084c <flash_read_status_reg1>
+        flash_write_status_reg(reg1_data, reg2_data);
+    805e0c72:	00614703          	lbu	a4,6(sp)
+    805e0c76:	00714783          	lbu	a5,7(sp)
+    uint8_t cmd[3] = {WRITE_REG, reg1_data, reg2_data};
+    805e0c7a:	4685                	li	a3,1
+    805e0c7c:	00d10423          	sb	a3,8(sp)
+    805e0c80:	00e104a3          	sb	a4,9(sp)
+    805e0c84:	00f10523          	sb	a5,10(sp)
+    flash_write_enable();
+    805e0c88:	00000097          	auipc	ra,0x0
+    805e0c8c:	ba2080e7          	jalr	-1118(ra) # 805e082a <flash_write_enable>
+    flash_send_data(cmd, 3, 0, 0);
+    805e0c90:	4681                	li	a3,0
+    805e0c92:	4601                	li	a2,0
+    805e0c94:	458d                	li	a1,3
+    805e0c96:	0028                	addi	a0,sp,8
+    805e0c98:	00000097          	auipc	ra,0x0
+    805e0c9c:	ab2080e7          	jalr	-1358(ra) # 805e074a <flash_send_data>
+    flash_page_program_fun = flash_quad_page_program;
+    805e0ca0:	00000797          	auipc	a5,0x0
+    805e0ca4:	ddc78793          	addi	a5,a5,-548 # 805e0a7c <flash_quad_page_program>
+}
+    805e0ca8:	60e2                	ld	ra,24(sp)
+    flash_page_program_fun = flash_quad_page_program;
+    805e0caa:	00002717          	auipc	a4,0x2
+    805e0cae:	a4f73f23          	sd	a5,-1442(a4) # 805e2708 <flash_page_program_fun>
+    flash_read_fun = flash_quad_read_data;
+    805e0cb2:	00000797          	auipc	a5,0x0
+    805e0cb6:	1a878793          	addi	a5,a5,424 # 805e0e5a <flash_quad_read_data>
+    805e0cba:	00002717          	auipc	a4,0x2
+    805e0cbe:	a4f73b23          	sd	a5,-1450(a4) # 805e2710 <flash_read_fun>
+}
+    805e0cc2:	4501                	li	a0,0
+    805e0cc4:	6105                	addi	sp,sp,32
+    805e0cc6:	8082                	ret
+
+00000000805e0cc8 <flash_write_data>:
+{
+    805e0cc8:	715d                	addi	sp,sp,-80
+    805e0cca:	e0a2                	sd	s0,64(sp)
+    805e0ccc:	f44e                	sd	s3,40(sp)
+    805e0cce:	f052                	sd	s4,32(sp)
+    805e0cd0:	ec56                	sd	s5,24(sp)
+    805e0cd2:	e85a                	sd	s6,16(sp)
+    805e0cd4:	e45e                	sd	s7,8(sp)
+    805e0cd6:	e486                	sd	ra,72(sp)
+    805e0cd8:	fc26                	sd	s1,56(sp)
+    805e0cda:	f84a                	sd	s2,48(sp)
+    805e0cdc:	89aa                	mv	s3,a0
+    805e0cde:	8a2e                	mv	s4,a1
+    805e0ce0:	8432                	mv	s0,a2
+        page_remain = flash_FLASH_PAGE_SIZE - (addr & (flash_FLASH_PAGE_SIZE - 1));
+    805e0ce2:	10000a93          	li	s5,256
+            len = write_len > 32 ? 32 : write_len;
+    805e0ce6:	02000b13          	li	s6,32
+            flash_page_program_fun(addr, data_buf, len);
+    805e0cea:	00002b97          	auipc	s7,0x2
+    805e0cee:	a1eb8b93          	addi	s7,s7,-1506 # 805e2708 <flash_page_program_fun>
+    while (length) {
+    805e0cf2:	ec09                	bnez	s0,805e0d0c <flash_write_data+0x44>
+}
+    805e0cf4:	60a6                	ld	ra,72(sp)
+    805e0cf6:	6406                	ld	s0,64(sp)
+    805e0cf8:	74e2                	ld	s1,56(sp)
+    805e0cfa:	7942                	ld	s2,48(sp)
+    805e0cfc:	79a2                	ld	s3,40(sp)
+    805e0cfe:	7a02                	ld	s4,32(sp)
+    805e0d00:	6ae2                	ld	s5,24(sp)
+    805e0d02:	6b42                	ld	s6,16(sp)
+    805e0d04:	6ba2                	ld	s7,8(sp)
+    805e0d06:	4501                	li	a0,0
+    805e0d08:	6161                	addi	sp,sp,80
+    805e0d0a:	8082                	ret
+        page_remain = flash_FLASH_PAGE_SIZE - (addr & (flash_FLASH_PAGE_SIZE - 1));
+    805e0d0c:	0ff9f793          	andi	a5,s3,255
+    805e0d10:	40fa873b          	subw	a4,s5,a5
+    805e0d14:	87ba                	mv	a5,a4
+        write_len = length < page_remain ? length : page_remain;
+    805e0d16:	00e47363          	bleu	a4,s0,805e0d1c <flash_write_data+0x54>
+    805e0d1a:	87a2                	mv	a5,s0
+    805e0d1c:	0007849b          	sext.w	s1,a5
+        length -= write_len;
+    805e0d20:	9c1d                	subw	s0,s0,a5
+            len = write_len > 32 ? 32 : write_len;
+    805e0d22:	8926                	mv	s2,s1
+    805e0d24:	009b7463          	bleu	s1,s6,805e0d2c <flash_write_data+0x64>
+    805e0d28:	02000913          	li	s2,32
+            flash_page_program_fun(addr, data_buf, len);
+    805e0d2c:	000bb783          	ld	a5,0(s7)
+    805e0d30:	85d2                	mv	a1,s4
+    805e0d32:	854e                	mv	a0,s3
+    805e0d34:	0009061b          	sext.w	a2,s2
+    805e0d38:	9782                	jalr	a5
+            data_buf += len;
+    805e0d3a:	02091793          	slli	a5,s2,0x20
+    805e0d3e:	9381                	srli	a5,a5,0x20
+            write_len -= len;
+    805e0d40:	412484bb          	subw	s1,s1,s2
+            addr += len;
+    805e0d44:	013909bb          	addw	s3,s2,s3
+            data_buf += len;
+    805e0d48:	9a3e                	add	s4,s4,a5
+        while (write_len) {
+    805e0d4a:	fce1                	bnez	s1,805e0d22 <flash_write_data+0x5a>
+    805e0d4c:	b75d                	j	805e0cf2 <flash_write_data+0x2a>
+
+00000000805e0d4e <flash_read_data>:
+{
+    805e0d4e:	711d                	addi	sp,sp,-96
+    805e0d50:	e8a2                	sd	s0,80(sp)
+    805e0d52:	e4a6                	sd	s1,72(sp)
+            spi_handle->spi_ctrlr0 = (0x06 << 2) | (0x02 << 8) | (0x08 << 11);
+    805e0d54:	6411                	lui	s0,0x4
+            spi_handle->spi_ctrlr0 = (0x08 << 2) | (0x02 << 8) | (0x04 << 11) | 0x01;
+    805e0d56:	6489                	lui	s1,0x2
+{
+    805e0d58:	e0ca                	sd	s2,64(sp)
+    805e0d5a:	fc4e                	sd	s3,56(sp)
+    805e0d5c:	f852                	sd	s4,48(sp)
+    805e0d5e:	f05a                	sd	s6,32(sp)
+    805e0d60:	ec5e                	sd	s7,24(sp)
+    805e0d62:	e862                	sd	s8,16(sp)
+    805e0d64:	ec86                	sd	ra,88(sp)
+    805e0d66:	f456                	sd	s5,40(sp)
+    805e0d68:	8baa                	mv	s7,a0
+    805e0d6a:	8c2e                	mv	s8,a1
+    805e0d6c:	8b32                	mv	s6,a2
+    805e0d6e:	8a36                	mv	s4,a3
+        write_len = length > 32 ? 32 : length;
+    805e0d70:	02000913          	li	s2,32
+    805e0d74:	4991                	li	s3,4
+            spi_handle->spi_ctrlr0 = (0x06 << 2) | (0x02 << 8) | (0x08 << 11);
+    805e0d76:	2184041b          	addiw	s0,s0,536
+            spi_handle->spi_ctrlr0 = (0x08 << 2) | (0x02 << 8) | (0x04 << 11) | 0x01;
+    805e0d7a:	2214849b          	addiw	s1,s1,545
+    while (length) {
+    805e0d7e:	000b1f63          	bnez	s6,805e0d9c <flash_read_data+0x4e>
+}
+    805e0d82:	60e6                	ld	ra,88(sp)
+    805e0d84:	6446                	ld	s0,80(sp)
+    805e0d86:	64a6                	ld	s1,72(sp)
+    805e0d88:	6906                	ld	s2,64(sp)
+    805e0d8a:	79e2                	ld	s3,56(sp)
+    805e0d8c:	7a42                	ld	s4,48(sp)
+    805e0d8e:	7aa2                	ld	s5,40(sp)
+    805e0d90:	7b02                	ld	s6,32(sp)
+    805e0d92:	6be2                	ld	s7,24(sp)
+    805e0d94:	6c42                	ld	s8,16(sp)
+    805e0d96:	4501                	li	a0,0
+    805e0d98:	6125                	addi	sp,sp,96
+    805e0d9a:	8082                	ret
+        write_len = length > 32 ? 32 : length;
+    805e0d9c:	000b0a9b          	sext.w	s5,s6
+    805e0da0:	01697463          	bleu	s6,s2,805e0da8 <flash_read_data+0x5a>
+    805e0da4:	02000a93          	li	s5,32
+    switch (mode) {
+    805e0da8:	013a0e63          	beq	s4,s3,805e0dc4 <flash_read_data+0x76>
+    805e0dac:	4795                	li	a5,5
+    805e0dae:	06fa0363          	beq	s4,a5,805e0e14 <flash_read_data+0xc6>
+        data_buf += write_len;
+    805e0db2:	020a9793          	slli	a5,s5,0x20
+    805e0db6:	9381                	srli	a5,a5,0x20
+        addr += write_len;
+    805e0db8:	015b8bbb          	addw	s7,s7,s5
+        data_buf += write_len;
+    805e0dbc:	9c3e                	add	s8,s8,a5
+        length -= write_len;
+    805e0dbe:	415b0b3b          	subw	s6,s6,s5
+    805e0dc2:	bf75                	j	805e0d7e <flash_read_data+0x30>
+            cmd[0] = FAST_READ_QUAL_OUTPUT;
+    805e0dc4:	06b00793          	li	a5,107
+    805e0dc8:	c43e                	sw	a5,8(sp)
+            spi_handle->ctrlr0 = (0x02 << tmod_offset) | (0x07 << dfs_offset) | (0x02 << frf_offset);
+    805e0dca:	00002617          	auipc	a2,0x2
+    805e0dce:	93764603          	lbu	a2,-1737(a2) # 805e2701 <dfs_offset>
+    805e0dd2:	00002797          	auipc	a5,0x2
+    805e0dd6:	9477c783          	lbu	a5,-1721(a5) # 805e2719 <tmod_offset>
+    805e0dda:	4709                	li	a4,2
+    805e0ddc:	469d                	li	a3,7
+    805e0dde:	00f717bb          	sllw	a5,a4,a5
+    805e0de2:	00c696bb          	sllw	a3,a3,a2
+    805e0de6:	8fd5                	or	a5,a5,a3
+    805e0de8:	00002697          	auipc	a3,0x2
+    805e0dec:	9306c683          	lbu	a3,-1744(a3) # 805e2718 <frf_offset>
+    805e0df0:	00d7173b          	sllw	a4,a4,a3
+    805e0df4:	8fd9                	or	a5,a5,a4
+            cmd[1] = addr;
+    805e0df6:	c65e                	sw	s7,12(sp)
+            spi_handle->ctrlr0 = (0x02 << tmod_offset) | (0x07 << dfs_offset) | (0x02 << frf_offset);
+    805e0df8:	54000737          	lui	a4,0x54000
+    805e0dfc:	2781                	sext.w	a5,a5
+    805e0dfe:	c31c                	sw	a5,0(a4)
+            spi_handle->spi_ctrlr0 = (0x06 << 2) | (0x02 << 8) | (0x08 << 11);
+    805e0e00:	0e872a23          	sw	s0,244(a4) # 540000f4 <_start-0x2c5dff0c>
+            flash_receive_data_enhanced(cmd, 2, data_buf, length);
+    805e0e04:	8656                	mv	a2,s5
+    805e0e06:	85e2                	mv	a1,s8
+    805e0e08:	0028                	addi	a0,sp,8
+    805e0e0a:	00000097          	auipc	ra,0x0
+    805e0e0e:	aa4080e7          	jalr	-1372(ra) # 805e08ae <flash_receive_data_enhanced.constprop.1>
+            break;
+    805e0e12:	b745                	j	805e0db2 <flash_read_data+0x64>
+            cmd[0] = FAST_READ_QUAL_IO;
+    805e0e14:	0eb00793          	li	a5,235
+    805e0e18:	c43e                	sw	a5,8(sp)
+            cmd[1] = addr << 8;
+    805e0e1a:	008b979b          	slliw	a5,s7,0x8
+    805e0e1e:	c63e                	sw	a5,12(sp)
+            spi_handle->ctrlr0 = (0x02 << tmod_offset) | (0x07 << dfs_offset) | (0x02 << frf_offset);
+    805e0e20:	00002617          	auipc	a2,0x2
+    805e0e24:	8e164603          	lbu	a2,-1823(a2) # 805e2701 <dfs_offset>
+    805e0e28:	00002797          	auipc	a5,0x2
+    805e0e2c:	8f17c783          	lbu	a5,-1807(a5) # 805e2719 <tmod_offset>
+    805e0e30:	4709                	li	a4,2
+    805e0e32:	469d                	li	a3,7
+    805e0e34:	00f717bb          	sllw	a5,a4,a5
+    805e0e38:	00c696bb          	sllw	a3,a3,a2
+    805e0e3c:	8fd5                	or	a5,a5,a3
+    805e0e3e:	00002697          	auipc	a3,0x2
+    805e0e42:	8da6c683          	lbu	a3,-1830(a3) # 805e2718 <frf_offset>
+    805e0e46:	00d7173b          	sllw	a4,a4,a3
+    805e0e4a:	8fd9                	or	a5,a5,a4
+    805e0e4c:	2781                	sext.w	a5,a5
+    805e0e4e:	54000737          	lui	a4,0x54000
+    805e0e52:	c31c                	sw	a5,0(a4)
+            spi_handle->spi_ctrlr0 = (0x08 << 2) | (0x02 << 8) | (0x04 << 11) | 0x01;
+    805e0e54:	0e972a23          	sw	s1,244(a4) # 540000f4 <_start-0x2c5dff0c>
+    805e0e58:	b775                	j	805e0e04 <flash_read_data+0xb6>
+
+00000000805e0e5a <flash_quad_read_data>:
+
+//------------------------------------------------------------------------------------------------
+static enum flash_status_t flash_quad_read_data(uint32_t addr, uint8_t *data_buf, uint32_t length)
+{
+    return flash_read_data(addr, data_buf, length, FLASH_QUAD_SINGLE);
+    805e0e5a:	4695                	li	a3,5
+    805e0e5c:	00000317          	auipc	t1,0x0
+    805e0e60:	ef230067          	jr	-270(t1) # 805e0d4e <flash_read_data>
+
+00000000805e0e64 <block_crc32>:
+            crc = (crc >> 1) ^ (0xEDB88320 & mask);
+    805e0e64:	edb88737          	lui	a4,0xedb88
+    crc = 0xFFFFFFFF;
+    805e0e68:	57fd                	li	a5,-1
+            crc = (crc >> 1) ^ (0xEDB88320 & mask);
+    805e0e6a:	32070713          	addi	a4,a4,800 # ffffffffedb88320 <_ebss+0xffffffff6d595ae0>
+    while (size != 0) {
+    805e0e6e:	e581                	bnez	a1,805e0e76 <block_crc32+0x12>
+}
+    805e0e70:	fff7c513          	not	a0,a5
+    805e0e74:	8082                	ret
+        byte = *message;
+    805e0e76:	00054683          	lbu	a3,0(a0) # 54000000 <_start-0x2c5e0000>
+        crc = crc ^ byte;
+    805e0e7a:	8fb5                	xor	a5,a5,a3
+    805e0e7c:	46a1                	li	a3,8
+            crc = (crc >> 1) ^ (0xEDB88320 & mask);
+    805e0e7e:	0017d61b          	srliw	a2,a5,0x1
+            mask = -(crc & 1);
+    805e0e82:	8b85                	andi	a5,a5,1
+    805e0e84:	40f007bb          	negw	a5,a5
+            crc = (crc >> 1) ^ (0xEDB88320 & mask);
+    805e0e88:	8ff9                	and	a5,a5,a4
+    805e0e8a:	8fb1                	xor	a5,a5,a2
+    805e0e8c:	36fd                	addiw	a3,a3,-1
+    805e0e8e:	2781                	sext.w	a5,a5
+        for (j = 7; j >= 0; j--) {
+    805e0e90:	f6fd                	bnez	a3,805e0e7e <block_crc32+0x1a>
+        message++;
+    805e0e92:	0505                	addi	a0,a0,1
+        size--;
+    805e0e94:	35fd                	addiw	a1,a1,-1
+    805e0e96:	bfe1                	j	805e0e6e <block_crc32+0xa>
+
+00000000805e0e98 <uart_send_char>:
+#include "syscalls.h"
+#include <stdio.h>
+
+//-------------------------
+void uart_send_char(char c)
+{
+    805e0e98:	1101                	addi	sp,sp,-32
+    805e0e9a:	00a107a3          	sb	a0,15(sp)
+    uart_send_data(UART_NUM, (char *)&c, 1);
+    805e0e9e:	00f10593          	addi	a1,sp,15
+    805e0ea2:	4605                	li	a2,1
+    805e0ea4:	4509                	li	a0,2
+{
+    805e0ea6:	ec06                	sd	ra,24(sp)
+    uart_send_data(UART_NUM, (char *)&c, 1);
+    805e0ea8:	00001097          	auipc	ra,0x1
+    805e0eac:	848080e7          	jalr	-1976(ra) # 805e16f0 <uart_send_data>
+}
+    805e0eb0:	60e2                	ld	ra,24(sp)
+    805e0eb2:	6105                	addi	sp,sp,32
+    805e0eb4:	8082                	ret
+
+00000000805e0eb6 <SLIP_send_frame_delimiter>:
+
+//----------------------------------
+void SLIP_send_frame_delimiter(void)
+{
+    uart_send_char((char)SLIP_SPECIAL_BYTE_END);
+    805e0eb6:	0c000513          	li	a0,192
+    805e0eba:	00000317          	auipc	t1,0x0
+    805e0ebe:	fde30067          	jr	-34(t1) # 805e0e98 <uart_send_char>
+
+00000000805e0ec2 <SLIP_send_frame_data>:
+}
+
+//--------------------------------
+void SLIP_send_frame_data(char ch)
+{
+    805e0ec2:	1141                	addi	sp,sp,-16
+    805e0ec4:	e406                	sd	ra,8(sp)
+    if (ch == SLIP_SPECIAL_BYTE_END) {
+    805e0ec6:	0c000713          	li	a4,192
+    805e0eca:	02e51063          	bne	a0,a4,805e0eea <SLIP_send_frame_data+0x28>
+        uart_send_char((char)SLIP_SPECIAL_BYTE_ESC);
+    805e0ece:	0db00513          	li	a0,219
+    805e0ed2:	00000097          	auipc	ra,0x0
+    805e0ed6:	fc6080e7          	jalr	-58(ra) # 805e0e98 <uart_send_char>
+        uart_send_char((char)SLIP_ESCAPED_BYTE_END);
+    805e0eda:	0dc00513          	li	a0,220
+        uart_send_char((char)SLIP_ESCAPED_BYTE_ESC);
+    }
+    else {
+        uart_send_char(ch);
+    }
+}
+    805e0ede:	60a2                	ld	ra,8(sp)
+    805e0ee0:	0141                	addi	sp,sp,16
+        uart_send_char(ch);
+    805e0ee2:	00000317          	auipc	t1,0x0
+    805e0ee6:	fb630067          	jr	-74(t1) # 805e0e98 <uart_send_char>
+    else if (ch == SLIP_SPECIAL_BYTE_ESC) {
+    805e0eea:	0db00713          	li	a4,219
+    805e0eee:	fee518e3          	bne	a0,a4,805e0ede <SLIP_send_frame_data+0x1c>
+        uart_send_char((char)SLIP_SPECIAL_BYTE_ESC);
+    805e0ef2:	00000097          	auipc	ra,0x0
+    805e0ef6:	fa6080e7          	jalr	-90(ra) # 805e0e98 <uart_send_char>
+        uart_send_char((char)SLIP_ESCAPED_BYTE_ESC);
+    805e0efa:	0dd00513          	li	a0,221
+    805e0efe:	b7c5                	j	805e0ede <SLIP_send_frame_data+0x1c>
+
+00000000805e0f00 <SLIP_send_frame_data_buf>:
+
+//-----------------------------------------------------------
+void SLIP_send_frame_data_buf(const void *buf, uint32_t size)
+{
+    805e0f00:	7179                	addi	sp,sp,-48
+    805e0f02:	f022                	sd	s0,32(sp)
+    805e0f04:	ec26                	sd	s1,24(sp)
+    805e0f06:	f406                	sd	ra,40(sp)
+    805e0f08:	84aa                	mv	s1,a0
+    const uint8_t *buf_c = (const uint8_t *) buf;
+
+    for (int i = 0; i < size; i++)
+    805e0f0a:	4401                	li	s0,0
+    805e0f0c:	0004079b          	sext.w	a5,s0
+    805e0f10:	00b7e763          	bltu	a5,a1,805e0f1e <SLIP_send_frame_data_buf+0x1e>
+        SLIP_send_frame_data(buf_c[i]);
+}
+    805e0f14:	70a2                	ld	ra,40(sp)
+    805e0f16:	7402                	ld	s0,32(sp)
+    805e0f18:	64e2                	ld	s1,24(sp)
+    805e0f1a:	6145                	addi	sp,sp,48
+    805e0f1c:	8082                	ret
+        SLIP_send_frame_data(buf_c[i]);
+    805e0f1e:	008487b3          	add	a5,s1,s0
+    805e0f22:	0007c503          	lbu	a0,0(a5)
+    805e0f26:	e42e                	sd	a1,8(sp)
+    805e0f28:	0405                	addi	s0,s0,1
+    805e0f2a:	00000097          	auipc	ra,0x0
+    805e0f2e:	f98080e7          	jalr	-104(ra) # 805e0ec2 <SLIP_send_frame_data>
+    805e0f32:	65a2                	ld	a1,8(sp)
+    805e0f34:	bfe1                	j	805e0f0c <SLIP_send_frame_data_buf+0xc>
+
+00000000805e0f36 <SLIP_send>:
+
+//--------------------------------------------
+void SLIP_send(const void *pkt, uint32_t size)
+{
+    805e0f36:	1101                	addi	sp,sp,-32
+    805e0f38:	ec06                	sd	ra,24(sp)
+    805e0f3a:	e42a                	sd	a0,8(sp)
+    805e0f3c:	e02e                	sd	a1,0(sp)
+    SLIP_send_frame_delimiter();
+    805e0f3e:	00000097          	auipc	ra,0x0
+    805e0f42:	f78080e7          	jalr	-136(ra) # 805e0eb6 <SLIP_send_frame_delimiter>
+    SLIP_send_frame_data_buf(pkt, size);
+    805e0f46:	6582                	ld	a1,0(sp)
+    805e0f48:	6522                	ld	a0,8(sp)
+    805e0f4a:	00000097          	auipc	ra,0x0
+    805e0f4e:	fb6080e7          	jalr	-74(ra) # 805e0f00 <SLIP_send_frame_data_buf>
+    SLIP_send_frame_delimiter();
+}
+    805e0f52:	60e2                	ld	ra,24(sp)
+    805e0f54:	6105                	addi	sp,sp,32
+    SLIP_send_frame_delimiter();
+    805e0f56:	00000317          	auipc	t1,0x0
+    805e0f5a:	f6030067          	jr	-160(t1) # 805e0eb6 <SLIP_send_frame_delimiter>
+
+00000000805e0f5e <SLIP_process_byte>:
+
+// Proces the received byte from data stream
+//-------------------------------------------------------
+int16_t SLIP_process_byte(char byte, slip_state_t *state)
+{
+    if (byte == SLIP_SPECIAL_BYTE_END) {
+    805e0f5e:	0c000713          	li	a4,192
+    805e0f62:	419c                	lw	a5,0(a1)
+    805e0f64:	00e51b63          	bne	a0,a4,805e0f7a <SLIP_process_byte+0x1c>
+        if (*state == SLIP_NO_FRAME) {
+    805e0f68:	e781                	bnez	a5,805e0f70 <SLIP_process_byte+0x12>
+            *state = SLIP_FRAME;
+    805e0f6a:	4785                	li	a5,1
+    switch (*state) {
+        case SLIP_NO_FRAME:
+            return SLIP_NO_BYTE;
+        case SLIP_FRAME:
+            if (byte == SLIP_SPECIAL_BYTE_ESC) {
+                *state = SLIP_FRAME_ESCAPING;
+    805e0f6c:	c19c                	sw	a5,0(a1)
+    805e0f6e:	a821                	j	805e0f86 <SLIP_process_byte+0x28>
+            *state = SLIP_NO_FRAME;
+    805e0f70:	0005a023          	sw	zero,0(a1)
+            return SLIP_FINISHED_FRAME;
+    805e0f74:	57f9                	li	a5,-2
+            // framing error
+            return SLIP_NO_BYTE;
+    }
+    // framing error
+    return SLIP_NO_BYTE;
+}
+    805e0f76:	853e                	mv	a0,a5
+    805e0f78:	8082                	ret
+    switch (*state) {
+    805e0f7a:	4705                	li	a4,1
+    805e0f7c:	00e78763          	beq	a5,a4,805e0f8a <SLIP_process_byte+0x2c>
+    805e0f80:	4689                	li	a3,2
+    805e0f82:	00d78e63          	beq	a5,a3,805e0f9e <SLIP_process_byte+0x40>
+                return SLIP_NO_BYTE;
+    805e0f86:	57fd                	li	a5,-1
+    805e0f88:	b7fd                	j	805e0f76 <SLIP_process_byte+0x18>
+            return byte;
+    805e0f8a:	0105179b          	slliw	a5,a0,0x10
+            if (byte == SLIP_SPECIAL_BYTE_ESC) {
+    805e0f8e:	0db00713          	li	a4,219
+            return byte;
+    805e0f92:	4107d79b          	sraiw	a5,a5,0x10
+            if (byte == SLIP_SPECIAL_BYTE_ESC) {
+    805e0f96:	fee510e3          	bne	a0,a4,805e0f76 <SLIP_process_byte+0x18>
+                *state = SLIP_FRAME_ESCAPING;
+    805e0f9a:	4789                	li	a5,2
+    805e0f9c:	bfc1                	j	805e0f6c <SLIP_process_byte+0xe>
+            if (byte == SLIP_ESCAPED_BYTE_END) {
+    805e0f9e:	0dc00793          	li	a5,220
+    805e0fa2:	00f51663          	bne	a0,a5,805e0fae <SLIP_process_byte+0x50>
+                *state = SLIP_FRAME;
+    805e0fa6:	c198                	sw	a4,0(a1)
+                return SLIP_SPECIAL_BYTE_END;
+    805e0fa8:	0c000793          	li	a5,192
+    805e0fac:	b7e9                	j	805e0f76 <SLIP_process_byte+0x18>
+            if (byte == SLIP_ESCAPED_BYTE_ESC) {
+    805e0fae:	0dd00693          	li	a3,221
+            return SLIP_NO_BYTE;
+    805e0fb2:	57fd                	li	a5,-1
+            if (byte == SLIP_ESCAPED_BYTE_ESC) {
+    805e0fb4:	fcd511e3          	bne	a0,a3,805e0f76 <SLIP_process_byte+0x18>
+                *state = SLIP_FRAME;
+    805e0fb8:	c198                	sw	a4,0(a1)
+                return SLIP_SPECIAL_BYTE_ESC;
+    805e0fba:	0db00793          	li	a5,219
+    805e0fbe:	bf65                	j	805e0f76 <SLIP_process_byte+0x18>
+
+00000000805e0fc0 <memset>:
+    805e0fc0:	433d                	li	t1,15
+    805e0fc2:	872a                	mv	a4,a0
+    805e0fc4:	02c37163          	bleu	a2,t1,805e0fe6 <memset+0x26>
+    805e0fc8:	00f77793          	andi	a5,a4,15
+    805e0fcc:	e3c1                	bnez	a5,805e104c <memset+0x8c>
+    805e0fce:	e1bd                	bnez	a1,805e1034 <memset+0x74>
+    805e0fd0:	ff067693          	andi	a3,a2,-16
+    805e0fd4:	8a3d                	andi	a2,a2,15
+    805e0fd6:	96ba                	add	a3,a3,a4
+    805e0fd8:	e30c                	sd	a1,0(a4)
+    805e0fda:	e70c                	sd	a1,8(a4)
+    805e0fdc:	0741                	addi	a4,a4,16
+    805e0fde:	fed76de3          	bltu	a4,a3,805e0fd8 <memset+0x18>
+    805e0fe2:	e211                	bnez	a2,805e0fe6 <memset+0x26>
+    805e0fe4:	8082                	ret
+    805e0fe6:	40c306b3          	sub	a3,t1,a2
+    805e0fea:	068a                	slli	a3,a3,0x2
+    805e0fec:	00000297          	auipc	t0,0x0
+    805e0ff0:	9696                	add	a3,a3,t0
+    805e0ff2:	00a68067          	jr	10(a3)
+    805e0ff6:	00b70723          	sb	a1,14(a4)
+    805e0ffa:	00b706a3          	sb	a1,13(a4)
+    805e0ffe:	00b70623          	sb	a1,12(a4)
+    805e1002:	00b705a3          	sb	a1,11(a4)
+    805e1006:	00b70523          	sb	a1,10(a4)
+    805e100a:	00b704a3          	sb	a1,9(a4)
+    805e100e:	00b70423          	sb	a1,8(a4)
+    805e1012:	00b703a3          	sb	a1,7(a4)
+    805e1016:	00b70323          	sb	a1,6(a4)
+    805e101a:	00b702a3          	sb	a1,5(a4)
+    805e101e:	00b70223          	sb	a1,4(a4)
+    805e1022:	00b701a3          	sb	a1,3(a4)
+    805e1026:	00b70123          	sb	a1,2(a4)
+    805e102a:	00b700a3          	sb	a1,1(a4)
+    805e102e:	00b70023          	sb	a1,0(a4)
+    805e1032:	8082                	ret
+    805e1034:	0ff5f593          	andi	a1,a1,255
+    805e1038:	00859693          	slli	a3,a1,0x8
+    805e103c:	8dd5                	or	a1,a1,a3
+    805e103e:	01059693          	slli	a3,a1,0x10
+    805e1042:	8dd5                	or	a1,a1,a3
+    805e1044:	02059693          	slli	a3,a1,0x20
+    805e1048:	8dd5                	or	a1,a1,a3
+    805e104a:	b759                	j	805e0fd0 <memset+0x10>
+    805e104c:	00279693          	slli	a3,a5,0x2
+    805e1050:	00000297          	auipc	t0,0x0
+    805e1054:	9696                	add	a3,a3,t0
+    805e1056:	8286                	mv	t0,ra
+    805e1058:	fa2680e7          	jalr	-94(a3)
+    805e105c:	8096                	mv	ra,t0
+    805e105e:	17c1                	addi	a5,a5,-16
+    805e1060:	8f1d                	sub	a4,a4,a5
+    805e1062:	963e                	add	a2,a2,a5
+    805e1064:	f8c371e3          	bleu	a2,t1,805e0fe6 <memset+0x26>
+    805e1068:	b79d                	j	805e0fce <memset+0xe>
+
+00000000805e106a <usleep>:
+ */
+#include "sleep.h"
+#include "sysctl.h"
+
+int usleep(uint64_t usec)
+{
+    805e106a:	1101                	addi	sp,sp,-32
+    805e106c:	e426                	sd	s1,8(sp)
+    805e106e:	ec06                	sd	ra,24(sp)
+    805e1070:	e822                	sd	s0,16(sp)
+    805e1072:	84aa                	mv	s1,a0
+    uint64_t cycle = read_cycle();
+    805e1074:	b0002473          	csrr	s0,mcycle
+    uint64_t nop_all = usec * sysctl_clock_get_freq(SYSCTL_CLOCK_CPU) / 1000000UL;
+    805e1078:	450d                	li	a0,3
+    805e107a:	00000097          	auipc	ra,0x0
+    805e107e:	35c080e7          	jalr	860(ra) # 805e13d6 <sysctl_clock_get_freq>
+    805e1082:	1502                	slli	a0,a0,0x20
+    805e1084:	9101                	srli	a0,a0,0x20
+    805e1086:	02950533          	mul	a0,a0,s1
+    805e108a:	000f47b7          	lui	a5,0xf4
+    805e108e:	24078793          	addi	a5,a5,576 # f4240 <_start-0x804ebdc0>
+    805e1092:	02f55533          	divu	a0,a0,a5
+    while(1)
+    {
+        if(read_cycle() - cycle >= nop_all)
+    805e1096:	b00027f3          	csrr	a5,mcycle
+    805e109a:	8f81                	sub	a5,a5,s0
+    805e109c:	fea7ede3          	bltu	a5,a0,805e1096 <usleep+0x2c>
+            break;
+    }
+    return 0;
+}
+    805e10a0:	60e2                	ld	ra,24(sp)
+    805e10a2:	6442                	ld	s0,16(sp)
+    805e10a4:	64a2                	ld	s1,8(sp)
+    805e10a6:	4501                	li	a0,0
+    805e10a8:	6105                	addi	sp,sp,32
+    805e10aa:	8082                	ret
+
+00000000805e10ac <fpioa_init>:
+         .resv0 = 0,
+         .pad_di = 0},
+};
+
+int fpioa_init(void)
+{
+    805e10ac:	715d                	addi	sp,sp,-80
+    int i = 0;
+
+    /* Enable fpioa clock in system controller */
+    sysctl_clock_enable(SYSCTL_CLOCK_FPIOA);
+    805e10ae:	4575                	li	a0,29
+{
+    805e10b0:	e486                	sd	ra,72(sp)
+    sysctl_clock_enable(SYSCTL_CLOCK_FPIOA);
+    805e10b2:	00000097          	auipc	ra,0x0
+    805e10b6:	27e080e7          	jalr	638(ra) # 805e1330 <sysctl_clock_enable>
+
+    /* Initialize tie */
+    fpioa_tie_t tie = {0};
+    805e10ba:	04000613          	li	a2,64
+    805e10be:	4581                	li	a1,0
+    805e10c0:	850a                	mv	a0,sp
+    805e10c2:	00000097          	auipc	ra,0x0
+    805e10c6:	efe080e7          	jalr	-258(ra) # 805e0fc0 <memset>
+
+    /* Set tie enable and tie value */
+    for(i = 0; i < FUNC_MAX; i++)
+    805e10ca:	4601                	li	a2,0
+    {
+        tie.en[i / 32] |= (function_config[i].tie_en << (i % 32));
+    805e10cc:	00001317          	auipc	t1,0x1
+    805e10d0:	f9430313          	addi	t1,t1,-108 # 805e2060 <function_config>
+    for(i = 0; i < FUNC_MAX; i++)
+    805e10d4:	10000813          	li	a6,256
+        tie.en[i / 32] |= (function_config[i].tie_en << (i % 32));
+    805e10d8:	40565713          	srai	a4,a2,0x5
+    805e10dc:	00261693          	slli	a3,a2,0x2
+    805e10e0:	00271593          	slli	a1,a4,0x2
+    805e10e4:	009c                	addi	a5,sp,64
+    805e10e6:	969a                	add	a3,a3,t1
+    805e10e8:	95be                	add	a1,a1,a5
+    805e10ea:	429c                	lw	a5,0(a3)
+    805e10ec:	fc05a883          	lw	a7,-64(a1)
+    805e10f0:	01f67513          	andi	a0,a2,31
+    805e10f4:	0187d69b          	srliw	a3,a5,0x18
+    805e10f8:	8a85                	andi	a3,a3,1
+    805e10fa:	00a696bb          	sllw	a3,a3,a0
+    805e10fe:	0116e6b3          	or	a3,a3,a7
+        tie.val[i / 32] |= (function_config[i].tie_val << (i % 32));
+    805e1102:	0721                	addi	a4,a4,8
+        tie.en[i / 32] |= (function_config[i].tie_en << (i % 32));
+    805e1104:	fcd5a023          	sw	a3,-64(a1)
+        tie.val[i / 32] |= (function_config[i].tie_val << (i % 32));
+    805e1108:	070a                	slli	a4,a4,0x2
+    805e110a:	0094                	addi	a3,sp,64
+    805e110c:	9736                	add	a4,a4,a3
+    805e110e:	fc072683          	lw	a3,-64(a4)
+    805e1112:	0197d79b          	srliw	a5,a5,0x19
+    805e1116:	8b85                	andi	a5,a5,1
+    805e1118:	00a797bb          	sllw	a5,a5,a0
+    805e111c:	8fd5                	or	a5,a5,a3
+    805e111e:	fcf72023          	sw	a5,-64(a4)
+    for(i = 0; i < FUNC_MAX; i++)
+    805e1122:	2605                	addiw	a2,a2,1
+    805e1124:	fb061ae3          	bne	a2,a6,805e10d8 <fpioa_init+0x2c>
+    805e1128:	878a                	mv	a5,sp
+    }
+
+    /* Atomic write every 32bit register to fpioa function */
+    for(i = 0; i < FUNC_MAX / 32; i++)
+    805e112a:	4701                	li	a4,0
+    805e112c:	502b0537          	lui	a0,0x502b0
+    805e1130:	4621                	li	a2,8
+    {
+        /* Set value before enable */
+        fpioa->tie.val[i] = tie.val[i];
+    805e1132:	538c                	lw	a1,32(a5)
+    805e1134:	00271693          	slli	a3,a4,0x2
+    805e1138:	96aa                	add	a3,a3,a0
+    805e113a:	0eb6a023          	sw	a1,224(a3)
+        fpioa->tie.en[i] = tie.en[i];
+    805e113e:	438c                	lw	a1,0(a5)
+    for(i = 0; i < FUNC_MAX / 32; i++)
+    805e1140:	2705                	addiw	a4,a4,1
+    805e1142:	0791                	addi	a5,a5,4
+        fpioa->tie.en[i] = tie.en[i];
+    805e1144:	0cb6a023          	sw	a1,192(a3)
+    for(i = 0; i < FUNC_MAX / 32; i++)
+    805e1148:	fec715e3          	bne	a4,a2,805e1132 <fpioa_init+0x86>
+    }
+
+    return 0;
+}
+    805e114c:	60a6                	ld	ra,72(sp)
+    805e114e:	4501                	li	a0,0
+    805e1150:	6161                	addi	sp,sp,80
+    805e1152:	8082                	ret
+
+00000000805e1154 <fpioa_set_function_raw>:
+}
+
+int fpioa_set_function_raw(int number, fpioa_function_t function)
+{
+    /* Check parameters */
+    if(number < 0 || number >= FPIOA_NUM_IO || function < 0 || function >= FUNC_MAX)
+    805e1154:	02f00713          	li	a4,47
+{
+    805e1158:	87aa                	mv	a5,a0
+    if(number < 0 || number >= FPIOA_NUM_IO || function < 0 || function >= FUNC_MAX)
+    805e115a:	02a76a63          	bltu	a4,a0,805e118e <fpioa_set_function_raw+0x3a>
+    805e115e:	0ff00713          	li	a4,255
+        return -1;
+    805e1162:	557d                	li	a0,-1
+    if(number < 0 || number >= FPIOA_NUM_IO || function < 0 || function >= FUNC_MAX)
+    805e1164:	02b76663          	bltu	a4,a1,805e1190 <fpioa_set_function_raw+0x3c>
+    /* Atomic write register */
+    fpioa->io[number] = (const fpioa_io_config_t){
+        .ch_sel = function_config[function].ch_sel,
+    805e1168:	1582                	slli	a1,a1,0x20
+    805e116a:	00001717          	auipc	a4,0x1
+    805e116e:	ef670713          	addi	a4,a4,-266 # 805e2060 <function_config>
+    805e1172:	81f9                	srli	a1,a1,0x1e
+    805e1174:	95ba                	add	a1,a1,a4
+    805e1176:	4198                	lw	a4,0(a1)
+    fpioa->io[number] = (const fpioa_io_config_t){
+    805e1178:	00fc06b7          	lui	a3,0xfc0
+    805e117c:	16fd                	addi	a3,a3,-1
+    805e117e:	502b0537          	lui	a0,0x502b0
+    805e1182:	078a                	slli	a5,a5,0x2
+    805e1184:	97aa                	add	a5,a5,a0
+    805e1186:	8f75                	and	a4,a4,a3
+    805e1188:	c398                	sw	a4,0(a5)
+        .ie_inv = function_config[function].ie_inv,
+        .di_inv = function_config[function].di_inv,
+        .st = function_config[function].st,
+        /* resv and pad_di do not need initialization */
+    };
+    return 0;
+    805e118a:	4501                	li	a0,0
+    805e118c:	8082                	ret
+        return -1;
+    805e118e:	557d                	li	a0,-1
+}
+    805e1190:	8082                	ret
+
+00000000805e1192 <fpioa_set_function>:
+
+int fpioa_set_function(int number, fpioa_function_t function)
+{
+    uint8_t index = 0;
+    /* Check parameters */
+    if(number < 0 || number >= FPIOA_NUM_IO || function < 0 || function >= FUNC_MAX)
+    805e1192:	02f00793          	li	a5,47
+    805e1196:	06a7ee63          	bltu	a5,a0,805e1212 <fpioa_set_function+0x80>
+{
+    805e119a:	7179                	addi	sp,sp,-48
+    805e119c:	f022                	sd	s0,32(sp)
+    805e119e:	f406                	sd	ra,40(sp)
+    805e11a0:	ec26                	sd	s1,24(sp)
+    805e11a2:	e84a                	sd	s2,16(sp)
+    805e11a4:	e44e                	sd	s3,8(sp)
+    805e11a6:	e052                	sd	s4,0(sp)
+    if(number < 0 || number >= FPIOA_NUM_IO || function < 0 || function >= FUNC_MAX)
+    805e11a8:	0ff00713          	li	a4,255
+    805e11ac:	842e                	mv	s0,a1
+        return -1;
+    805e11ae:	57fd                	li	a5,-1
+    if(number < 0 || number >= FPIOA_NUM_IO || function < 0 || function >= FUNC_MAX)
+    805e11b0:	04b76863          	bltu	a4,a1,805e1200 <fpioa_set_function+0x6e>
+    if(function == FUNC_RESV0)
+    805e11b4:	07800793          	li	a5,120
+    805e11b8:	4901                	li	s2,0
+    805e11ba:	02f58e63          	beq	a1,a5,805e11f6 <fpioa_set_function+0x64>
+    805e11be:	84aa                	mv	s1,a0
+        return 0;
+    }
+    /* Compare all IO */
+    for(index = 0; index < FPIOA_NUM_IO; index++)
+    {
+        if((fpioa->io[index].ch_sel == function) && (index != number))
+    805e11c0:	502b0a37          	lui	s4,0x502b0
+    for(index = 0; index < FPIOA_NUM_IO; index++)
+    805e11c4:	03000993          	li	s3,48
+        if((fpioa->io[index].ch_sel == function) && (index != number))
+    805e11c8:	0009051b          	sext.w	a0,s2
+    805e11cc:	00251793          	slli	a5,a0,0x2
+    805e11d0:	97d2                	add	a5,a5,s4
+    805e11d2:	439c                	lw	a5,0(a5)
+    805e11d4:	0ff7f793          	andi	a5,a5,255
+    805e11d8:	00879a63          	bne	a5,s0,805e11ec <fpioa_set_function+0x5a>
+    805e11dc:	00950863          	beq	a0,s1,805e11ec <fpioa_set_function+0x5a>
+            fpioa_set_function_raw(index, FUNC_RESV0);
+    805e11e0:	07800593          	li	a1,120
+    805e11e4:	00000097          	auipc	ra,0x0
+    805e11e8:	f70080e7          	jalr	-144(ra) # 805e1154 <fpioa_set_function_raw>
+    805e11ec:	2905                	addiw	s2,s2,1
+    for(index = 0; index < FPIOA_NUM_IO; index++)
+    805e11ee:	fd391de3          	bne	s2,s3,805e11c8 <fpioa_set_function+0x36>
+    }
+    fpioa_set_function_raw(number, function);
+    805e11f2:	85a2                	mv	a1,s0
+    805e11f4:	8526                	mv	a0,s1
+    805e11f6:	00000097          	auipc	ra,0x0
+    805e11fa:	f5e080e7          	jalr	-162(ra) # 805e1154 <fpioa_set_function_raw>
+    return 0;
+    805e11fe:	4781                	li	a5,0
+}
+    805e1200:	70a2                	ld	ra,40(sp)
+    805e1202:	7402                	ld	s0,32(sp)
+    805e1204:	64e2                	ld	s1,24(sp)
+    805e1206:	6942                	ld	s2,16(sp)
+    805e1208:	69a2                	ld	s3,8(sp)
+    805e120a:	6a02                	ld	s4,0(sp)
+    805e120c:	853e                	mv	a0,a5
+    805e120e:	6145                	addi	sp,sp,48
+    805e1210:	8082                	ret
+        return -1;
+    805e1212:	57fd                	li	a5,-1
+}
+    805e1214:	853e                	mv	a0,a5
+    805e1216:	8082                	ret
+
+00000000805e1218 <sysctl_reset_ctl>:
+    return sysctl->clk_freq.clk_freq;
+}
+
+static void sysctl_reset_ctl(sysctl_reset_t reset, uint8_t rst_value)
+{
+    switch(reset)
+    805e1218:	47a9                	li	a5,10
+    805e121a:	02f50a63          	beq	a0,a5,805e124e <sysctl_reset_ctl+0x36>
+    805e121e:	00a7e663          	bltu	a5,a0,805e122a <sysctl_reset_ctl+0x12>
+    805e1222:	4799                	li	a5,6
+    805e1224:	00f50a63          	beq	a0,a5,805e1238 <sysctl_reset_ctl+0x20>
+            sysctl->peri_reset.rtc_reset = rst_value;
+            break;*/
+
+        default:
+            while (1)
+                ;
+    805e1228:	a001                	j	805e1228 <sysctl_reset_ctl+0x10>
+    805e122a:	47cd                	li	a5,19
+    805e122c:	02f50a63          	beq	a0,a5,805e1260 <sysctl_reset_ctl+0x48>
+    805e1230:	47d5                	li	a5,21
+    805e1232:	04f50463          	beq	a0,a5,805e127a <sysctl_reset_ctl+0x62>
+    805e1236:	bfcd                	j	805e1228 <sysctl_reset_ctl+0x10>
+            sysctl->peri_reset.gpio_reset = rst_value;
+    805e1238:	50440737          	lui	a4,0x50440
+    805e123c:	5b5c                	lw	a5,52(a4)
+    805e123e:	8985                	andi	a1,a1,1
+    805e1240:	0055959b          	slliw	a1,a1,0x5
+    805e1244:	fdf7f793          	andi	a5,a5,-33
+            sysctl->peri_reset.spi3_reset = rst_value;
+    805e1248:	8ddd                	or	a1,a1,a5
+    805e124a:	db4c                	sw	a1,52(a4)
+            break;
+    805e124c:	8082                	ret
+            sysctl->peri_reset.spi3_reset = rst_value;
+    805e124e:	50440737          	lui	a4,0x50440
+    805e1252:	5b5c                	lw	a5,52(a4)
+    805e1254:	8985                	andi	a1,a1,1
+    805e1256:	0095959b          	slliw	a1,a1,0x9
+    805e125a:	dff7f793          	andi	a5,a5,-513
+    805e125e:	b7ed                	j	805e1248 <sysctl_reset_ctl+0x30>
+            sysctl->peri_reset.uart3_reset = rst_value;
+    805e1260:	504406b7          	lui	a3,0x50440
+    805e1264:	5adc                	lw	a5,52(a3)
+    805e1266:	8985                	andi	a1,a1,1
+    805e1268:	0125959b          	slliw	a1,a1,0x12
+    805e126c:	fffc0737          	lui	a4,0xfffc0
+            sysctl->peri_reset.fpioa_reset = rst_value;
+    805e1270:	177d                	addi	a4,a4,-1
+    805e1272:	8ff9                	and	a5,a5,a4
+    805e1274:	8ddd                	or	a1,a1,a5
+    805e1276:	dacc                	sw	a1,52(a3)
+            break;
+    }
+}
+    805e1278:	8082                	ret
+            sysctl->peri_reset.fpioa_reset = rst_value;
+    805e127a:	504406b7          	lui	a3,0x50440
+    805e127e:	8985                	andi	a1,a1,1
+    805e1280:	5adc                	lw	a5,52(a3)
+    805e1282:	0145959b          	slliw	a1,a1,0x14
+    805e1286:	fff00737          	lui	a4,0xfff00
+    805e128a:	b7dd                	j	805e1270 <sysctl_reset_ctl+0x58>
+
+00000000805e128c <sysctl_clock_device_en>:
+    return 0;
+}
+
+static int sysctl_clock_device_en(sysctl_clock_t clock, uint8_t en)
+{
+    switch(clock)
+    805e128c:	47c9                	li	a5,18
+    805e128e:	00f50f63          	beq	a0,a5,805e12ac <sysctl_clock_device_en+0x20>
+    805e1292:	00a7e663          	bltu	a5,a0,805e129e <sysctl_clock_device_en+0x12>
+    805e1296:	47b9                	li	a5,14
+    805e1298:	02f50663          	beq	a0,a5,805e12c4 <sysctl_clock_device_en+0x38>
+            sysctl->clk_en_peri.spi1_clk_en = en;
+            break;*/
+
+        default:
+            while (1)
+                ;
+    805e129c:	a001                	j	805e129c <sysctl_clock_device_en+0x10>
+    805e129e:	47ed                	li	a5,27
+    805e12a0:	02f50b63          	beq	a0,a5,805e12d6 <sysctl_clock_device_en+0x4a>
+    805e12a4:	47f5                	li	a5,29
+    805e12a6:	04f50563          	beq	a0,a5,805e12f0 <sysctl_clock_device_en+0x64>
+    805e12aa:	bfcd                	j	805e129c <sysctl_clock_device_en+0x10>
+            sysctl->clk_en_peri.spi3_clk_en = en;
+    805e12ac:	50440737          	lui	a4,0x50440
+    805e12b0:	575c                	lw	a5,44(a4)
+    805e12b2:	8985                	andi	a1,a1,1
+    805e12b4:	0095959b          	slliw	a1,a1,0x9
+    805e12b8:	dff7f793          	andi	a5,a5,-513
+            sysctl->clk_en_peri.gpio_clk_en = en;
+    805e12bc:	8ddd                	or	a1,a1,a5
+    805e12be:	d74c                	sw	a1,44(a4)
+            break;
+    }
+
+    return 0;
+}
+    805e12c0:	4501                	li	a0,0
+    805e12c2:	8082                	ret
+            sysctl->clk_en_peri.gpio_clk_en = en;
+    805e12c4:	50440737          	lui	a4,0x50440
+    805e12c8:	575c                	lw	a5,44(a4)
+    805e12ca:	8985                	andi	a1,a1,1
+    805e12cc:	0055959b          	slliw	a1,a1,0x5
+    805e12d0:	fdf7f793          	andi	a5,a5,-33
+    805e12d4:	b7e5                	j	805e12bc <sysctl_clock_device_en+0x30>
+            sysctl->clk_en_peri.uart3_clk_en = en;
+    805e12d6:	504406b7          	lui	a3,0x50440
+    805e12da:	56dc                	lw	a5,44(a3)
+    805e12dc:	8985                	andi	a1,a1,1
+    805e12de:	0125959b          	slliw	a1,a1,0x12
+    805e12e2:	fffc0737          	lui	a4,0xfffc0
+            sysctl->clk_en_peri.fpioa_clk_en = en;
+    805e12e6:	177d                	addi	a4,a4,-1
+    805e12e8:	8ff9                	and	a5,a5,a4
+    805e12ea:	8ddd                	or	a1,a1,a5
+    805e12ec:	d6cc                	sw	a1,44(a3)
+            break;
+    805e12ee:	bfc9                	j	805e12c0 <sysctl_clock_device_en+0x34>
+            sysctl->clk_en_peri.fpioa_clk_en = en;
+    805e12f0:	504406b7          	lui	a3,0x50440
+    805e12f4:	8985                	andi	a1,a1,1
+    805e12f6:	56dc                	lw	a5,44(a3)
+    805e12f8:	0145959b          	slliw	a1,a1,0x14
+    805e12fc:	fff00737          	lui	a4,0xfff00
+    805e1300:	b7dd                	j	805e12e6 <sysctl_clock_device_en+0x5a>
+
+00000000805e1302 <sysctl_reset>:
+{
+    805e1302:	1141                	addi	sp,sp,-16
+    sysctl_reset_ctl(reset, 1);
+    805e1304:	4585                	li	a1,1
+{
+    805e1306:	e406                	sd	ra,8(sp)
+    805e1308:	e022                	sd	s0,0(sp)
+    805e130a:	842a                	mv	s0,a0
+    sysctl_reset_ctl(reset, 1);
+    805e130c:	00000097          	auipc	ra,0x0
+    805e1310:	f0c080e7          	jalr	-244(ra) # 805e1218 <sysctl_reset_ctl>
+    usleep(10);
+    805e1314:	4529                	li	a0,10
+    805e1316:	00000097          	auipc	ra,0x0
+    805e131a:	d54080e7          	jalr	-684(ra) # 805e106a <usleep>
+    sysctl_reset_ctl(reset, 0);
+    805e131e:	8522                	mv	a0,s0
+}
+    805e1320:	6402                	ld	s0,0(sp)
+    805e1322:	60a2                	ld	ra,8(sp)
+    sysctl_reset_ctl(reset, 0);
+    805e1324:	4581                	li	a1,0
+}
+    805e1326:	0141                	addi	sp,sp,16
+    sysctl_reset_ctl(reset, 0);
+    805e1328:	00000317          	auipc	t1,0x0
+    805e132c:	ef030067          	jr	-272(t1) # 805e1218 <sysctl_reset_ctl>
+
+00000000805e1330 <sysctl_clock_enable>:
+
+int sysctl_clock_enable(sysctl_clock_t clock)
+{
+    if(clock >= SYSCTL_CLOCK_MAX)
+    805e1330:	02a00793          	li	a5,42
+    805e1334:	06a7e263          	bltu	a5,a0,805e1398 <sysctl_clock_enable+0x68>
+{
+    805e1338:	1141                	addi	sp,sp,-16
+    805e133a:	e406                	sd	ra,8(sp)
+    805e133c:	ff25071b          	addiw	a4,a0,-14
+    805e1340:	47dd                	li	a5,23
+    805e1342:	00e7ef63          	bltu	a5,a4,805e1360 <sysctl_clock_enable+0x30>
+    805e1346:	4785                	li	a5,1
+    805e1348:	00e797b3          	sll	a5,a5,a4
+    805e134c:	00d84737          	lui	a4,0xd84
+    805e1350:	8f7d                	and	a4,a4,a5
+    805e1352:	e71d                	bnez	a4,805e1380 <sysctl_clock_enable+0x50>
+    805e1354:	6729                	lui	a4,0xa
+    805e1356:	0705                	addi	a4,a4,1
+    805e1358:	8f7d                	and	a4,a4,a5
+    805e135a:	ef01                	bnez	a4,805e1372 <sysctl_clock_enable+0x42>
+    805e135c:	8b99                	andi	a5,a5,6
+    805e135e:	e79d                	bnez	a5,805e138c <sysctl_clock_enable+0x5c>
+        return -1;
+    sysctl_clock_bus_en(clock, 1);
+    sysctl_clock_device_en(clock, 1);
+    805e1360:	4585                	li	a1,1
+    805e1362:	00000097          	auipc	ra,0x0
+    805e1366:	f2a080e7          	jalr	-214(ra) # 805e128c <sysctl_clock_device_en>
+    return 0;
+}
+    805e136a:	60a2                	ld	ra,8(sp)
+    return 0;
+    805e136c:	4501                	li	a0,0
+}
+    805e136e:	0141                	addi	sp,sp,16
+    805e1370:	8082                	ret
+                sysctl->clk_en_cent.apb0_clk_en = en;
+    805e1372:	50440737          	lui	a4,0x50440
+    805e1376:	571c                	lw	a5,40(a4)
+    805e1378:	0087e793          	ori	a5,a5,8
+                sysctl->clk_en_cent.apb2_clk_en = en;
+    805e137c:	d71c                	sw	a5,40(a4)
+                break;
+    805e137e:	b7cd                	j	805e1360 <sysctl_clock_enable+0x30>
+                sysctl->clk_en_cent.apb1_clk_en = en;
+    805e1380:	50440737          	lui	a4,0x50440
+    805e1384:	571c                	lw	a5,40(a4)
+    805e1386:	0107e793          	ori	a5,a5,16
+    805e138a:	bfcd                	j	805e137c <sysctl_clock_enable+0x4c>
+                sysctl->clk_en_cent.apb2_clk_en = en;
+    805e138c:	50440737          	lui	a4,0x50440
+    805e1390:	571c                	lw	a5,40(a4)
+    805e1392:	0207e793          	ori	a5,a5,32
+    805e1396:	b7dd                	j	805e137c <sysctl_clock_enable+0x4c>
+        return -1;
+    805e1398:	557d                	li	a0,-1
+}
+    805e139a:	8082                	ret
+
+00000000805e139c <sysctl_clock_set_threshold>:
+}
+
+int sysctl_clock_set_threshold(sysctl_threshold_t which, int threshold)
+{
+    int result = 0;
+    switch(which)
+    805e139c:	c511                	beqz	a0,805e13a8 <sysctl_clock_set_threshold+0xc>
+    805e139e:	47b1                	li	a5,12
+    805e13a0:	00f50f63          	beq	a0,a5,805e13be <sysctl_clock_set_threshold+0x22>
+        case SYSCTL_THRESHOLD_I2S2:
+            sysctl->clk_th4.i2s2_clk_threshold = (uint16_t)threshold;
+            break;*/
+
+        default:
+            result = -1;
+    805e13a4:	557d                	li	a0,-1
+    805e13a6:	8082                	ret
+            sysctl->clk_sel0.aclk_divider_sel = (uint8_t)threshold & 0x03;
+    805e13a8:	50440737          	lui	a4,0x50440
+    805e13ac:	531c                	lw	a5,32(a4)
+    805e13ae:	898d                	andi	a1,a1,3
+    805e13b0:	0015959b          	slliw	a1,a1,0x1
+    805e13b4:	9be5                	andi	a5,a5,-7
+    805e13b6:	8ddd                	or	a1,a1,a5
+    805e13b8:	d30c                	sw	a1,32(a4)
+    int result = 0;
+    805e13ba:	4501                	li	a0,0
+            break;
+    }
+    return result;
+}
+    805e13bc:	8082                	ret
+            sysctl->clk_th1.spi3_clk_threshold = (uint8_t)threshold;
+    805e13be:	504406b7          	lui	a3,0x50440
+    805e13c2:	5edc                	lw	a5,60(a3)
+    805e13c4:	01000737          	lui	a4,0x1000
+    805e13c8:	177d                	addi	a4,a4,-1
+    805e13ca:	0185959b          	slliw	a1,a1,0x18
+    805e13ce:	8ff9                	and	a5,a5,a4
+    805e13d0:	8ddd                	or	a1,a1,a5
+    805e13d2:	decc                	sw	a1,60(a3)
+    805e13d4:	b7dd                	j	805e13ba <sysctl_clock_set_threshold+0x1e>
+
+00000000805e13d6 <sysctl_clock_get_freq>:
+uint32_t sysctl_clock_get_freq(sysctl_clock_t clock)
+{
+    uint32_t source = 0;
+    uint32_t result = 0;
+
+    switch(clock)
+    805e13d6:	02a00793          	li	a5,42
+    805e13da:	16a7e463          	bltu	a5,a0,805e1542 <sysctl_clock_get_freq+0x16c>
+    805e13de:	1502                	slli	a0,a0,0x20
+    805e13e0:	00001717          	auipc	a4,0x1
+    805e13e4:	08070713          	addi	a4,a4,128 # 805e2460 <function_config+0x400>
+    805e13e8:	8179                	srli	a0,a0,0x1e
+    805e13ea:	953a                	add	a0,a0,a4
+    805e13ec:	411c                	lw	a5,0(a0)
+{
+    805e13ee:	1141                	addi	sp,sp,-16
+    805e13f0:	e406                	sd	ra,8(sp)
+    805e13f2:	e022                	sd	s0,0(sp)
+    switch(clock)
+    805e13f4:	97ba                	add	a5,a5,a4
+    805e13f6:	8782                	jr	a5
+    uint32_t result = 0;
+    805e13f8:	4501                	li	a0,0
+         */
+        default:
+            break;
+    }
+    return result;
+}
+    805e13fa:	60a2                	ld	ra,8(sp)
+    805e13fc:	6402                	ld	s0,0(sp)
+    805e13fe:	0141                	addi	sp,sp,16
+    805e1400:	8082                	ret
+    805e1402:	6402                	ld	s0,0(sp)
+    805e1404:	60a2                	ld	ra,8(sp)
+    805e1406:	0141                	addi	sp,sp,16
+    805e1408:	00000317          	auipc	t1,0x0
+    805e140c:	2ac30067          	jr	684(t1) # 805e16b4 <sysctl_clock_source_get_freq.part.2>
+    if(pll >= SYSCTL_PLL_MAX)
+    805e1410:	4505                	li	a0,1
+}
+    805e1412:	6402                	ld	s0,0(sp)
+    805e1414:	60a2                	ld	ra,8(sp)
+    805e1416:	0141                	addi	sp,sp,16
+    805e1418:	00000317          	auipc	t1,0x0
+    805e141c:	17830067          	jr	376(t1) # 805e1590 <sysctl_pll_get_freq.part.3>
+    if(pll >= SYSCTL_PLL_MAX)
+    805e1420:	4509                	li	a0,2
+    805e1422:	bfc5                	j	805e1412 <sysctl_clock_get_freq+0x3c>
+            clock_select = (int)sysctl->clk_sel0.aclk_sel;
+    805e1424:	50440437          	lui	s0,0x50440
+    805e1428:	501c                	lw	a5,32(s0)
+    805e142a:	8b85                	andi	a5,a5,1
+    return clock_select;
+    805e142c:	10078663          	beqz	a5,805e1538 <sysctl_clock_get_freq+0x162>
+    uint32_t result = 0;
+    805e1430:	4501                	li	a0,0
+    805e1432:	d7e1                	beqz	a5,805e13fa <sysctl_clock_get_freq+0x24>
+    switch(input)
+    805e1434:	00000097          	auipc	ra,0x0
+    805e1438:	280080e7          	jalr	640(ra) # 805e16b4 <sysctl_clock_source_get_freq.part.2>
+            threshold = (int)sysctl->clk_sel0.aclk_divider_sel;
+    805e143c:	501c                	lw	a5,32(s0)
+                    source = sysctl_clock_source_get_freq(SYSCTL_SOURCE_PLL0) /
+    805e143e:	1502                	slli	a0,a0,0x20
+    805e1440:	9101                	srli	a0,a0,0x20
+            threshold = (int)sysctl->clk_sel0.aclk_divider_sel;
+    805e1442:	0017d79b          	srliw	a5,a5,0x1
+    805e1446:	8b8d                	andi	a5,a5,3
+                    source = sysctl_clock_source_get_freq(SYSCTL_SOURCE_PLL0) /
+    805e1448:	2785                	addiw	a5,a5,1
+    805e144a:	00f55533          	srl	a0,a0,a5
+    805e144e:	2501                	sext.w	a0,a0
+                    break;
+    805e1450:	b76d                	j	805e13fa <sysctl_clock_get_freq+0x24>
+            result = sysctl_clock_get_freq(SYSCTL_CLOCK_ACLK);
+    805e1452:	02800513          	li	a0,40
+    805e1456:	00000097          	auipc	ra,0x0
+    805e145a:	f80080e7          	jalr	-128(ra) # 805e13d6 <sysctl_clock_get_freq>
+            threshold = (int)sysctl->clk_th0.sram0_gclk_threshold;
+    805e145e:	504407b7          	lui	a5,0x50440
+    805e1462:	5f9c                	lw	a5,56(a5)
+            threshold = (int)sysctl->clk_th0.sram1_gclk_threshold;
+    805e1464:	8bbd                	andi	a5,a5,15
+            result = source / (sysctl_clock_get_threshold(SYSCTL_THRESHOLD_APB2) + 1);
+    805e1466:	2785                	addiw	a5,a5,1
+            result = source / ((sysctl_clock_get_threshold(SYSCTL_THRESHOLD_SPI3) + 1) * 2);
+    805e1468:	02f5553b          	divuw	a0,a0,a5
+            break;
+    805e146c:	b779                	j	805e13fa <sysctl_clock_get_freq+0x24>
+            result = sysctl_clock_get_freq(SYSCTL_CLOCK_ACLK);
+    805e146e:	02800513          	li	a0,40
+    805e1472:	00000097          	auipc	ra,0x0
+    805e1476:	f64080e7          	jalr	-156(ra) # 805e13d6 <sysctl_clock_get_freq>
+            threshold = (int)sysctl->clk_th0.sram1_gclk_threshold;
+    805e147a:	504407b7          	lui	a5,0x50440
+    805e147e:	5f9c                	lw	a5,56(a5)
+    805e1480:	0047d79b          	srliw	a5,a5,0x4
+    805e1484:	b7c5                	j	805e1464 <sysctl_clock_get_freq+0x8e>
+            result = sysctl_clock_get_freq(SYSCTL_CLOCK_ACLK);
+    805e1486:	02800513          	li	a0,40
+    805e148a:	00000097          	auipc	ra,0x0
+    805e148e:	f4c080e7          	jalr	-180(ra) # 805e13d6 <sysctl_clock_get_freq>
+            threshold = (int)sysctl->clk_th0.rom_gclk_threshold;
+    805e1492:	504407b7          	lui	a5,0x50440
+    805e1496:	5f9c                	lw	a5,56(a5)
+    805e1498:	0107d79b          	srliw	a5,a5,0x10
+    805e149c:	b7e1                	j	805e1464 <sysctl_clock_get_freq+0x8e>
+            result = sysctl_clock_get_freq(SYSCTL_CLOCK_ACLK);
+    805e149e:	02800513          	li	a0,40
+    805e14a2:	00000097          	auipc	ra,0x0
+    805e14a6:	f34080e7          	jalr	-204(ra) # 805e13d6 <sysctl_clock_get_freq>
+            threshold = (int)sysctl->clk_th0.dvp_gclk_threshold;
+    805e14aa:	504407b7          	lui	a5,0x50440
+    805e14ae:	5f9c                	lw	a5,56(a5)
+    805e14b0:	00c7d79b          	srliw	a5,a5,0xc
+    805e14b4:	bf45                	j	805e1464 <sysctl_clock_get_freq+0x8e>
+            result = sysctl_clock_get_freq(SYSCTL_CLOCK_ACLK);
+    805e14b6:	02800513          	li	a0,40
+    805e14ba:	00000097          	auipc	ra,0x0
+    805e14be:	f1c080e7          	jalr	-228(ra) # 805e13d6 <sysctl_clock_get_freq>
+            threshold = (int)sysctl->clk_sel0.apb0_clk_sel;
+    805e14c2:	504407b7          	lui	a5,0x50440
+    805e14c6:	539c                	lw	a5,32(a5)
+    805e14c8:	0037d79b          	srliw	a5,a5,0x3
+            threshold = (int)sysctl->clk_sel0.apb2_clk_sel;
+    805e14cc:	8b9d                	andi	a5,a5,7
+    805e14ce:	bf61                	j	805e1466 <sysctl_clock_get_freq+0x90>
+            result = sysctl_clock_get_freq(SYSCTL_CLOCK_ACLK);
+    805e14d0:	02800513          	li	a0,40
+    805e14d4:	00000097          	auipc	ra,0x0
+    805e14d8:	f02080e7          	jalr	-254(ra) # 805e13d6 <sysctl_clock_get_freq>
+            threshold = (int)sysctl->clk_sel0.apb1_clk_sel;
+    805e14dc:	504407b7          	lui	a5,0x50440
+    805e14e0:	539c                	lw	a5,32(a5)
+    805e14e2:	0067d79b          	srliw	a5,a5,0x6
+    805e14e6:	b7dd                	j	805e14cc <sysctl_clock_get_freq+0xf6>
+            result = sysctl_clock_get_freq(SYSCTL_CLOCK_ACLK);
+    805e14e8:	02800513          	li	a0,40
+    805e14ec:	00000097          	auipc	ra,0x0
+    805e14f0:	eea080e7          	jalr	-278(ra) # 805e13d6 <sysctl_clock_get_freq>
+            threshold = (int)sysctl->clk_sel0.apb2_clk_sel;
+    805e14f4:	504407b7          	lui	a5,0x50440
+    805e14f8:	539c                	lw	a5,32(a5)
+    805e14fa:	0097d79b          	srliw	a5,a5,0x9
+    805e14fe:	b7f9                	j	805e14cc <sysctl_clock_get_freq+0xf6>
+            clock_select = (int)sysctl->clk_sel0.spi3_clk_sel;
+    805e1500:	504407b7          	lui	a5,0x50440
+    805e1504:	539c                	lw	a5,32(a5)
+    805e1506:	00c7d79b          	srliw	a5,a5,0xc
+    805e150a:	8b85                	andi	a5,a5,1
+    return clock_select;
+    805e150c:	c38d                	beqz	a5,805e152e <sysctl_clock_get_freq+0x158>
+    uint32_t source = 0;
+    805e150e:	4501                	li	a0,0
+    805e1510:	c791                	beqz	a5,805e151c <sysctl_clock_get_freq+0x146>
+    switch(input)
+    805e1512:	00000097          	auipc	ra,0x0
+    805e1516:	1a2080e7          	jalr	418(ra) # 805e16b4 <sysctl_clock_source_get_freq.part.2>
+    805e151a:	2501                	sext.w	a0,a0
+            threshold = (int)sysctl->clk_th1.spi3_clk_threshold;
+    805e151c:	504407b7          	lui	a5,0x50440
+    805e1520:	5fdc                	lw	a5,60(a5)
+    805e1522:	0187d79b          	srliw	a5,a5,0x18
+            result = source / ((sysctl_clock_get_threshold(SYSCTL_THRESHOLD_SPI3) + 1) * 2);
+    805e1526:	2785                	addiw	a5,a5,1
+    805e1528:	0017979b          	slliw	a5,a5,0x1
+    805e152c:	bf35                	j	805e1468 <sysctl_clock_get_freq+0x92>
+                    source = sysctl_clock_source_get_freq(SYSCTL_SOURCE_IN0);
+    805e152e:	018cc537          	lui	a0,0x18cc
+    805e1532:	a8050513          	addi	a0,a0,-1408 # 18cba80 <_start-0x7ed14580>
+    805e1536:	b7dd                	j	805e151c <sysctl_clock_get_freq+0x146>
+            result = source;
+    805e1538:	018cc537          	lui	a0,0x18cc
+    805e153c:	a8050513          	addi	a0,a0,-1408 # 18cba80 <_start-0x7ed14580>
+    805e1540:	bd6d                	j	805e13fa <sysctl_clock_get_freq+0x24>
+    uint32_t result = 0;
+    805e1542:	4501                	li	a0,0
+}
+    805e1544:	8082                	ret
+
+00000000805e1546 <sysctl_clock_source_get_freq>:
+    switch(input)
+    805e1546:	4791                	li	a5,4
+    805e1548:	00a7ec63          	bltu	a5,a0,805e1560 <sysctl_clock_source_get_freq+0x1a>
+    805e154c:	1502                	slli	a0,a0,0x20
+    805e154e:	00001717          	auipc	a4,0x1
+    805e1552:	fbe70713          	addi	a4,a4,-66 # 805e250c <function_config+0x4ac>
+    805e1556:	8179                	srli	a0,a0,0x1e
+    805e1558:	953a                	add	a0,a0,a4
+    805e155a:	411c                	lw	a5,0(a0)
+    805e155c:	97ba                	add	a5,a5,a4
+    805e155e:	8782                	jr	a5
+            result = 0;
+    805e1560:	4501                	li	a0,0
+    805e1562:	8082                	ret
+    805e1564:	00000317          	auipc	t1,0x0
+    805e1568:	15030067          	jr	336(t1) # 805e16b4 <sysctl_clock_source_get_freq.part.2>
+    if(pll >= SYSCTL_PLL_MAX)
+    805e156c:	4505                	li	a0,1
+    805e156e:	00000317          	auipc	t1,0x0
+    805e1572:	02230067          	jr	34(t1) # 805e1590 <sysctl_pll_get_freq.part.3>
+    805e1576:	4509                	li	a0,2
+    805e1578:	bfdd                	j	805e156e <sysctl_clock_source_get_freq+0x28>
+            result = sysctl_clock_get_freq(SYSCTL_CLOCK_ACLK);
+    805e157a:	02800513          	li	a0,40
+    805e157e:	00000317          	auipc	t1,0x0
+    805e1582:	e5830067          	jr	-424(t1) # 805e13d6 <sysctl_clock_get_freq>
+            result = SYSCTRL_CLOCK_FREQ_IN0;
+    805e1586:	018cc537          	lui	a0,0x18cc
+    805e158a:	a8050513          	addi	a0,a0,-1408 # 18cba80 <_start-0x7ed14580>
+}
+    805e158e:	8082                	ret
+
+00000000805e1590 <sysctl_pll_get_freq.part.3>:
+uint32_t sysctl_pll_get_freq(sysctl_pll_t pll)
+    805e1590:	7179                	addi	sp,sp,-48
+    805e1592:	f406                	sd	ra,40(sp)
+    805e1594:	f022                	sd	s0,32(sp)
+    805e1596:	ec26                	sd	s1,24(sp)
+    805e1598:	e84a                	sd	s2,16(sp)
+    805e159a:	e44e                	sd	s3,8(sp)
+    805e159c:	4785                	li	a5,1
+    805e159e:	0af50563          	beq	a0,a5,805e1648 <sysctl_pll_get_freq.part.3+0xb8>
+    805e15a2:	cd25                	beqz	a0,805e161a <sysctl_pll_get_freq.part.3+0x8a>
+    805e15a4:	4789                	li	a5,2
+    805e15a6:	0cf50063          	beq	a0,a5,805e1666 <sysctl_pll_get_freq.part.3+0xd6>
+    uint32_t nr = 0, nf = 0, od = 0;
+    805e15aa:	4401                	li	s0,0
+    805e15ac:	4481                	li	s1,0
+    805e15ae:	4901                	li	s2,0
+    uint32_t freq_in = 0, freq_out = 0;
+    805e15b0:	4501                	li	a0,0
+    freq_out = (double)freq_in / (double)nr * (double)nf / (double)od;
+    805e15b2:	00001097          	auipc	ra,0x1
+    805e15b6:	9ee080e7          	jalr	-1554(ra) # 805e1fa0 <__floatunsidf>
+    805e15ba:	89aa                	mv	s3,a0
+    805e15bc:	854a                	mv	a0,s2
+    805e15be:	00001097          	auipc	ra,0x1
+    805e15c2:	9e2080e7          	jalr	-1566(ra) # 805e1fa0 <__floatunsidf>
+    805e15c6:	85aa                	mv	a1,a0
+    805e15c8:	854e                	mv	a0,s3
+    805e15ca:	00000097          	auipc	ra,0x0
+    805e15ce:	246080e7          	jalr	582(ra) # 805e1810 <__divdf3>
+    805e15d2:	892a                	mv	s2,a0
+    805e15d4:	8526                	mv	a0,s1
+    805e15d6:	00001097          	auipc	ra,0x1
+    805e15da:	9ca080e7          	jalr	-1590(ra) # 805e1fa0 <__floatunsidf>
+    805e15de:	85aa                	mv	a1,a0
+    805e15e0:	854a                	mv	a0,s2
+    805e15e2:	00000097          	auipc	ra,0x0
+    805e15e6:	5dc080e7          	jalr	1500(ra) # 805e1bbe <__muldf3>
+    805e15ea:	84aa                	mv	s1,a0
+    805e15ec:	8522                	mv	a0,s0
+    805e15ee:	00001097          	auipc	ra,0x1
+    805e15f2:	9b2080e7          	jalr	-1614(ra) # 805e1fa0 <__floatunsidf>
+    805e15f6:	85aa                	mv	a1,a0
+    805e15f8:	8526                	mv	a0,s1
+    805e15fa:	00000097          	auipc	ra,0x0
+    805e15fe:	216080e7          	jalr	534(ra) # 805e1810 <__divdf3>
+    805e1602:	00001097          	auipc	ra,0x1
+    805e1606:	938080e7          	jalr	-1736(ra) # 805e1f3a <__fixunsdfsi>
+    805e160a:	2501                	sext.w	a0,a0
+}
+    805e160c:	70a2                	ld	ra,40(sp)
+    805e160e:	7402                	ld	s0,32(sp)
+    805e1610:	64e2                	ld	s1,24(sp)
+    805e1612:	6942                	ld	s2,16(sp)
+    805e1614:	69a2                	ld	s3,8(sp)
+    805e1616:	6145                	addi	sp,sp,48
+    805e1618:	8082                	ret
+            nr = sysctl->pll0.clkr0 + 1;
+    805e161a:	504407b7          	lui	a5,0x50440
+    805e161e:	0087a903          	lw	s2,8(a5) # 50440008 <_start-0x3019fff8>
+            nf = sysctl->pll0.clkf0 + 1;
+    805e1622:	4784                	lw	s1,8(a5)
+            od = sysctl->pll0.clkod0 + 1;
+    805e1624:	4780                	lw	s0,8(a5)
+            nr = sysctl->pll0.clkr0 + 1;
+    805e1626:	00f97913          	andi	s2,s2,15
+            nf = sysctl->pll0.clkf0 + 1;
+    805e162a:	0044d49b          	srliw	s1,s1,0x4
+    805e162e:	03f4f493          	andi	s1,s1,63
+            nr = sysctl->pll0.clkr0 + 1;
+    805e1632:	0905                	addi	s2,s2,1
+            nf = sysctl->pll0.clkf0 + 1;
+    805e1634:	0485                	addi	s1,s1,1
+            od = sysctl->pll1.clkod1 + 1;
+    805e1636:	00a4541b          	srliw	s0,s0,0xa
+    805e163a:	883d                	andi	s0,s0,15
+            freq_in = sysctl_clock_source_get_freq(SYSCTL_SOURCE_IN0);
+    805e163c:	018cc537          	lui	a0,0x18cc
+            od = sysctl->pll1.clkod1 + 1;
+    805e1640:	0405                	addi	s0,s0,1
+            freq_in = sysctl_clock_source_get_freq(SYSCTL_SOURCE_IN0);
+    805e1642:	a8050513          	addi	a0,a0,-1408 # 18cba80 <_start-0x7ed14580>
+    805e1646:	b7b5                	j	805e15b2 <sysctl_pll_get_freq.part.3+0x22>
+            nr = sysctl->pll1.clkr1 + 1;
+    805e1648:	504407b7          	lui	a5,0x50440
+    805e164c:	00c7a903          	lw	s2,12(a5) # 5044000c <_start-0x3019fff4>
+            nf = sysctl->pll1.clkf1 + 1;
+    805e1650:	47c4                	lw	s1,12(a5)
+            od = sysctl->pll1.clkod1 + 1;
+    805e1652:	47c0                	lw	s0,12(a5)
+            nr = sysctl->pll1.clkr1 + 1;
+    805e1654:	00f97913          	andi	s2,s2,15
+            nf = sysctl->pll1.clkf1 + 1;
+    805e1658:	0044d49b          	srliw	s1,s1,0x4
+    805e165c:	03f4f493          	andi	s1,s1,63
+            nr = sysctl->pll1.clkr1 + 1;
+    805e1660:	0905                	addi	s2,s2,1
+            nf = sysctl->pll1.clkf1 + 1;
+    805e1662:	0485                	addi	s1,s1,1
+            od = sysctl->pll1.clkod1 + 1;
+    805e1664:	bfc9                	j	805e1636 <sysctl_pll_get_freq.part.3+0xa6>
+            select = sysctl->pll2.pll_ckin_sel2;
+    805e1666:	50440437          	lui	s0,0x50440
+    805e166a:	481c                	lw	a5,16(s0)
+            if(select < sizeof(get_source_pll2))
+    805e166c:	470d                	li	a4,3
+                return 0;
+    805e166e:	4501                	li	a0,0
+            select = sysctl->pll2.pll_ckin_sel2;
+    805e1670:	01a7d79b          	srliw	a5,a5,0x1a
+    805e1674:	8b8d                	andi	a5,a5,3
+            if(select < sizeof(get_source_pll2))
+    805e1676:	f8e78be3          	beq	a5,a4,805e160c <sysctl_pll_get_freq.part.3+0x7c>
+                freq_in = sysctl_clock_source_get_freq(get_source_pll2[select]);
+    805e167a:	00001717          	auipc	a4,0x1
+    805e167e:	03670713          	addi	a4,a4,54 # 805e26b0 <get_source_pll2>
+    805e1682:	97ba                	add	a5,a5,a4
+    805e1684:	0007c503          	lbu	a0,0(a5)
+    805e1688:	00000097          	auipc	ra,0x0
+    805e168c:	ebe080e7          	jalr	-322(ra) # 805e1546 <sysctl_clock_source_get_freq>
+            nr = sysctl->pll2.clkr2 + 1;
+    805e1690:	01042903          	lw	s2,16(s0) # 50440010 <_start-0x3019fff0>
+            nf = sysctl->pll2.clkf2 + 1;
+    805e1694:	4804                	lw	s1,16(s0)
+            od = sysctl->pll2.clkod2 + 1;
+    805e1696:	4800                	lw	s0,16(s0)
+            nr = sysctl->pll2.clkr2 + 1;
+    805e1698:	00f97913          	andi	s2,s2,15
+            nf = sysctl->pll2.clkf2 + 1;
+    805e169c:	0044d49b          	srliw	s1,s1,0x4
+            od = sysctl->pll2.clkod2 + 1;
+    805e16a0:	00a4541b          	srliw	s0,s0,0xa
+            nf = sysctl->pll2.clkf2 + 1;
+    805e16a4:	03f4f493          	andi	s1,s1,63
+            od = sysctl->pll2.clkod2 + 1;
+    805e16a8:	883d                	andi	s0,s0,15
+                freq_in = sysctl_clock_source_get_freq(get_source_pll2[select]);
+    805e16aa:	2501                	sext.w	a0,a0
+            nr = sysctl->pll2.clkr2 + 1;
+    805e16ac:	0905                	addi	s2,s2,1
+            nf = sysctl->pll2.clkf2 + 1;
+    805e16ae:	0485                	addi	s1,s1,1
+            od = sysctl->pll2.clkod2 + 1;
+    805e16b0:	0405                	addi	s0,s0,1
+            break;
+    805e16b2:	b701                	j	805e15b2 <sysctl_pll_get_freq.part.3+0x22>
+
+00000000805e16b4 <sysctl_clock_source_get_freq.part.2>:
+    if(pll >= SYSCTL_PLL_MAX)
+    805e16b4:	4501                	li	a0,0
+    805e16b6:	00000317          	auipc	t1,0x0
+    805e16ba:	eda30067          	jr	-294(t1) # 805e1590 <sysctl_pll_get_freq.part.3>
+
+00000000805e16be <uart_receive_data>:
+int uart_receive_data(uart_device_number_t channel, char *buffer, size_t buf_len)
+{
+    size_t i = 0;
+    for(i = 0; i < buf_len; i++)
+    {
+        if(uart[channel]->LSR & 1)
+    805e16be:	1502                	slli	a0,a0,0x20
+    805e16c0:	01d55713          	srli	a4,a0,0x1d
+    805e16c4:	00001517          	auipc	a0,0x1
+    805e16c8:	e5c50513          	addi	a0,a0,-420 # 805e2520 <uart>
+    for(i = 0; i < buf_len; i++)
+    805e16cc:	4781                	li	a5,0
+        if(uart[channel]->LSR & 1)
+    805e16ce:	953a                	add	a0,a0,a4
+    for(i = 0; i < buf_len; i++)
+    805e16d0:	00c79563          	bne	a5,a2,805e16da <uart_receive_data+0x1c>
+            buffer[i] = (char)(uart[channel]->RBR & 0xff);
+        else
+            break;
+    }
+    return i;
+    805e16d4:	0007851b          	sext.w	a0,a5
+}
+    805e16d8:	8082                	ret
+        if(uart[channel]->LSR & 1)
+    805e16da:	6114                	ld	a3,0(a0)
+    805e16dc:	4ad8                	lw	a4,20(a3)
+    805e16de:	8b05                	andi	a4,a4,1
+    805e16e0:	db75                	beqz	a4,805e16d4 <uart_receive_data+0x16>
+            buffer[i] = (char)(uart[channel]->RBR & 0xff);
+    805e16e2:	4294                	lw	a3,0(a3)
+    805e16e4:	00f58733          	add	a4,a1,a5
+    for(i = 0; i < buf_len; i++)
+    805e16e8:	0785                	addi	a5,a5,1
+            buffer[i] = (char)(uart[channel]->RBR & 0xff);
+    805e16ea:	00d70023          	sb	a3,0(a4)
+    805e16ee:	b7cd                	j	805e16d0 <uart_receive_data+0x12>
+
+00000000805e16f0 <uart_send_data>:
+    while(uart[channel]->LSR & (1u << 5))
+    805e16f0:	1502                	slli	a0,a0,0x20
+    805e16f2:	01d55713          	srli	a4,a0,0x1d
+
+int uart_send_data(uart_device_number_t channel, const char *buffer, size_t buf_len)
+{
+    g_write_count = 0;
+    805e16f6:	00001797          	auipc	a5,0x1
+    805e16fa:	fc07a523          	sw	zero,-54(a5) # 805e26c0 <g_write_count>
+    while(uart[channel]->LSR & (1u << 5))
+    805e16fe:	00001517          	auipc	a0,0x1
+    805e1702:	e2250513          	addi	a0,a0,-478 # 805e2520 <uart>
+    while(g_write_count < buf_len)
+    805e1706:	00001797          	auipc	a5,0x1
+    805e170a:	fba78793          	addi	a5,a5,-70 # 805e26c0 <g_write_count>
+    while(uart[channel]->LSR & (1u << 5))
+    805e170e:	953a                	add	a0,a0,a4
+    while(g_write_count < buf_len)
+    805e1710:	4398                	lw	a4,0(a5)
+    805e1712:	2701                	sext.w	a4,a4
+    805e1714:	00c76563          	bltu	a4,a2,805e171e <uart_send_data+0x2e>
+    {
+        uart_channel_putc(*buffer++, channel);
+        g_write_count++;
+    }
+    return g_write_count;
+    805e1718:	4388                	lw	a0,0(a5)
+}
+    805e171a:	2501                	sext.w	a0,a0
+    805e171c:	8082                	ret
+        uart_channel_putc(*buffer++, channel);
+    805e171e:	0585                	addi	a1,a1,1
+    805e1720:	fff5c703          	lbu	a4,-1(a1)
+    while(uart[channel]->LSR & (1u << 5))
+    805e1724:	00053803          	ld	a6,0(a0)
+    805e1728:	01482683          	lw	a3,20(a6)
+    805e172c:	0206f693          	andi	a3,a3,32
+    805e1730:	fee5                	bnez	a3,805e1728 <uart_send_data+0x38>
+    uart[channel]->THR = c;
+    805e1732:	2701                	sext.w	a4,a4
+    805e1734:	00e82023          	sw	a4,0(a6)
+        g_write_count++;
+    805e1738:	4398                	lw	a4,0(a5)
+    805e173a:	2705                	addiw	a4,a4,1
+    805e173c:	00001697          	auipc	a3,0x1
+    805e1740:	f8e6a223          	sw	a4,-124(a3) # 805e26c0 <g_write_count>
+    805e1744:	b7f1                	j	805e1710 <uart_send_data+0x20>
+
+00000000805e1746 <uart_configure>:
+
+void uart_configure(uart_device_number_t channel, uint32_t baud_rate, uart_bitwidth_t data_width, uart_stopbit_t stopbit, uart_parity_t parity)
+{
+    805e1746:	7179                	addi	sp,sp,-48
+    805e1748:	f022                	sd	s0,32(sp)
+    805e174a:	842a                	mv	s0,a0
+        default:
+            //configASSERT(!"Invalid parity");
+            break;
+    }*/
+
+    uint32_t freq = sysctl_clock_get_freq(SYSCTL_CLOCK_APB0);
+    805e174c:	4519                	li	a0,6
+{
+    805e174e:	f406                	sd	ra,40(sp)
+    805e1750:	ec2e                	sd	a1,24(sp)
+    805e1752:	e832                	sd	a2,16(sp)
+    805e1754:	e436                	sd	a3,8(sp)
+    uint32_t freq = sysctl_clock_get_freq(SYSCTL_CLOCK_APB0);
+    805e1756:	00000097          	auipc	ra,0x0
+    805e175a:	c80080e7          	jalr	-896(ra) # 805e13d6 <sysctl_clock_get_freq>
+    uint32_t divisor = freq / baud_rate;
+    805e175e:	65e2                	ld	a1,24(sp)
+    uint8_t dll = (divisor - (dlh << 12)) / __UART_BRATE_CONST;
+    uint8_t dlf = divisor - (dlh << 12) - dll * __UART_BRATE_CONST;
+
+    /* Set UART registers */
+
+    uart[channel]->LCR |= 1u << 7;
+    805e1760:	1402                	slli	s0,s0,0x20
+    805e1762:	8075                	srli	s0,s0,0x1d
+    uint32_t divisor = freq / baud_rate;
+    805e1764:	02b5553b          	divuw	a0,a0,a1
+    uint32_t stopbit_val = stopbit == UART_STOP_1 ? 0 : 1;
+    805e1768:	66a2                	ld	a3,8(sp)
+    uart[channel]->DLH = dlh;
+    uart[channel]->DLL = dll;
+    uart[channel]->DLF = dlf;
+    uart[channel]->LCR = 0;
+    uart[channel]->LCR = (data_width - 5) | (stopbit_val << 2) | (parity_val << 3);
+    805e176a:	6642                	ld	a2,16(sp)
+    uart[channel]->LCR &= ~(1u << 7);
+    uart[channel]->IER |= 0x80; /* THRE */
+    uart[channel]->FCR = UART_RECEIVE_FIFO_1 << 6 | UART_SEND_FIFO_8 << 4 | 0x1 << 3 | 0x1;
+}
+    805e176c:	70a2                	ld	ra,40(sp)
+    uint32_t stopbit_val = stopbit == UART_STOP_1 ? 0 : 1;
+    805e176e:	00d036b3          	snez	a3,a3
+    uart[channel]->LCR = (data_width - 5) | (stopbit_val << 2) | (parity_val << 3);
+    805e1772:	0026969b          	slliw	a3,a3,0x2
+    805e1776:	366d                	addiw	a2,a2,-5
+    805e1778:	8ed1                	or	a3,a3,a2
+    805e177a:	2681                	sext.w	a3,a3
+    uint8_t dlh = divisor >> 12;
+    805e177c:	00c5571b          	srliw	a4,a0,0xc
+    uint8_t dll = (divisor - (dlh << 12)) / __UART_BRATE_CONST;
+    805e1780:	0ff77813          	andi	a6,a4,255
+    805e1784:	00c7179b          	slliw	a5,a4,0xc
+    805e1788:	000ff737          	lui	a4,0xff
+    805e178c:	8ff9                	and	a5,a5,a4
+    uart[channel]->LCR |= 1u << 7;
+    805e178e:	00001717          	auipc	a4,0x1
+    805e1792:	d9270713          	addi	a4,a4,-622 # 805e2520 <uart>
+    805e1796:	943a                	add	s0,s0,a4
+    805e1798:	6018                	ld	a4,0(s0)
+    uint8_t dll = (divisor - (dlh << 12)) / __UART_BRATE_CONST;
+    805e179a:	40f507bb          	subw	a5,a0,a5
+    805e179e:	0047d79b          	srliw	a5,a5,0x4
+    uart[channel]->LCR |= 1u << 7;
+    805e17a2:	474c                	lw	a1,12(a4)
+}
+    805e17a4:	7402                	ld	s0,32(sp)
+    uart[channel]->LCR |= 1u << 7;
+    805e17a6:	2581                	sext.w	a1,a1
+    805e17a8:	0805e593          	ori	a1,a1,128
+    805e17ac:	c74c                	sw	a1,12(a4)
+    uart[channel]->DLH = dlh;
+    805e17ae:	0ff7f593          	andi	a1,a5,255
+    uint8_t dlf = divisor - (dlh << 12) - dll * __UART_BRATE_CONST;
+    805e17b2:	0047979b          	slliw	a5,a5,0x4
+    uart[channel]->DLH = dlh;
+    805e17b6:	01072223          	sw	a6,4(a4)
+    uint8_t dlf = divisor - (dlh << 12) - dll * __UART_BRATE_CONST;
+    805e17ba:	40f507bb          	subw	a5,a0,a5
+    uart[channel]->DLL = dll;
+    805e17be:	c30c                	sw	a1,0(a4)
+    uart[channel]->DLF = dlf;
+    805e17c0:	0ff7f793          	andi	a5,a5,255
+    805e17c4:	0cf72023          	sw	a5,192(a4)
+    uart[channel]->LCR = 0;
+    805e17c8:	00072623          	sw	zero,12(a4)
+    uart[channel]->LCR = (data_width - 5) | (stopbit_val << 2) | (parity_val << 3);
+    805e17cc:	c754                	sw	a3,12(a4)
+    uart[channel]->LCR &= ~(1u << 7);
+    805e17ce:	475c                	lw	a5,12(a4)
+    805e17d0:	2781                	sext.w	a5,a5
+    805e17d2:	f7f7f793          	andi	a5,a5,-129
+    805e17d6:	c75c                	sw	a5,12(a4)
+    uart[channel]->IER |= 0x80; /* THRE */
+    805e17d8:	435c                	lw	a5,4(a4)
+    805e17da:	2781                	sext.w	a5,a5
+    805e17dc:	0807e793          	ori	a5,a5,128
+    805e17e0:	c35c                	sw	a5,4(a4)
+    uart[channel]->FCR = UART_RECEIVE_FIFO_1 << 6 | UART_SEND_FIFO_8 << 4 | 0x1 << 3 | 0x1;
+    805e17e2:	03900793          	li	a5,57
+    805e17e6:	c71c                	sw	a5,8(a4)
+}
+    805e17e8:	6145                	addi	sp,sp,48
+    805e17ea:	8082                	ret
+
+00000000805e17ec <uart_init>:
+
+void __attribute__((weak, alias("uart_configure")))
+uart_config(uart_device_number_t channel, uint32_t baud_rate, uart_bitwidth_t data_width, uart_stopbit_t stopbit, uart_parity_t parity);
+
+void uart_init(uart_device_number_t channel)
+{
+    805e17ec:	1141                	addi	sp,sp,-16
+    805e17ee:	e022                	sd	s0,0(sp)
+    805e17f0:	842a                	mv	s0,a0
+    sysctl_clock_enable(SYSCTL_CLOCK_UART1 + channel);
+    805e17f2:	2565                	addiw	a0,a0,25
+{
+    805e17f4:	e406                	sd	ra,8(sp)
+    sysctl_clock_enable(SYSCTL_CLOCK_UART1 + channel);
+    805e17f6:	00000097          	auipc	ra,0x0
+    805e17fa:	b3a080e7          	jalr	-1222(ra) # 805e1330 <sysctl_clock_enable>
+    sysctl_reset(SYSCTL_RESET_UART1 + channel);
+    805e17fe:	0114051b          	addiw	a0,s0,17
+}
+    805e1802:	6402                	ld	s0,0(sp)
+    805e1804:	60a2                	ld	ra,8(sp)
+    805e1806:	0141                	addi	sp,sp,16
+    sysctl_reset(SYSCTL_RESET_UART1 + channel);
+    805e1808:	00000317          	auipc	t1,0x0
+    805e180c:	afa30067          	jr	-1286(t1) # 805e1302 <sysctl_reset>
+
+00000000805e1810 <__divdf3>:
+    805e1810:	715d                	addi	sp,sp,-80
+    805e1812:	e45e                	sd	s7,8(sp)
+    805e1814:	e486                	sd	ra,72(sp)
+    805e1816:	e0a2                	sd	s0,64(sp)
+    805e1818:	fc26                	sd	s1,56(sp)
+    805e181a:	f84a                	sd	s2,48(sp)
+    805e181c:	f44e                	sd	s3,40(sp)
+    805e181e:	f052                	sd	s4,32(sp)
+    805e1820:	ec56                	sd	s5,24(sp)
+    805e1822:	e85a                	sd	s6,16(sp)
+    805e1824:	8bae                	mv	s7,a1
+    805e1826:	00202a73          	frrm	s4
+    805e182a:	597d                	li	s2,-1
+    805e182c:	03455993          	srli	s3,a0,0x34
+    805e1830:	00c95913          	srli	s2,s2,0xc
+    805e1834:	7ff9f993          	andi	s3,s3,2047
+    805e1838:	2a01                	sext.w	s4,s4
+    805e183a:	00a97933          	and	s2,s2,a0
+    805e183e:	03f55a93          	srli	s5,a0,0x3f
+    805e1842:	02098063          	beqz	s3,805e1862 <__divdf3+0x52>
+    805e1846:	7ff00793          	li	a5,2047
+    805e184a:	02f98d63          	beq	s3,a5,805e1884 <__divdf3+0x74>
+    805e184e:	4785                	li	a5,1
+    805e1850:	090e                	slli	s2,s2,0x3
+    805e1852:	17de                	slli	a5,a5,0x37
+    805e1854:	00f96933          	or	s2,s2,a5
+    805e1858:	c0198993          	addi	s3,s3,-1023
+    805e185c:	4b01                	li	s6,0
+    805e185e:	4481                	li	s1,0
+    805e1860:	a825                	j	805e1898 <__divdf3+0x88>
+    805e1862:	08090563          	beqz	s2,805e18ec <__divdf3+0xdc>
+    805e1866:	854a                	mv	a0,s2
+    805e1868:	00000097          	auipc	ra,0x0
+    805e186c:	77e080e7          	jalr	1918(ra) # 805e1fe6 <__clzdi2>
+    805e1870:	2501                	sext.w	a0,a0
+    805e1872:	ff85079b          	addiw	a5,a0,-8
+    805e1876:	c0d00993          	li	s3,-1011
+    805e187a:	00f91933          	sll	s2,s2,a5
+    805e187e:	40a989b3          	sub	s3,s3,a0
+    805e1882:	bfe9                	j	805e185c <__divdf3+0x4c>
+    805e1884:	06090763          	beqz	s2,805e18f2 <__divdf3+0xe2>
+    805e1888:	00c91793          	slli	a5,s2,0xc
+    805e188c:	7ff00993          	li	s3,2047
+    805e1890:	4b0d                	li	s6,3
+    805e1892:	44c1                	li	s1,16
+    805e1894:	fc07c5e3          	bltz	a5,805e185e <__divdf3+0x4e>
+    805e1898:	034bd793          	srli	a5,s7,0x34
+    805e189c:	547d                	li	s0,-1
+    805e189e:	8031                	srli	s0,s0,0xc
+    805e18a0:	7ff7f793          	andi	a5,a5,2047
+    805e18a4:	01747433          	and	s0,s0,s7
+    805e18a8:	03fbdb93          	srli	s7,s7,0x3f
+    805e18ac:	c7b9                	beqz	a5,805e18fa <__divdf3+0xea>
+    805e18ae:	7ff00713          	li	a4,2047
+    805e18b2:	06e78363          	beq	a5,a4,805e1918 <__divdf3+0x108>
+    805e18b6:	4705                	li	a4,1
+    805e18b8:	040e                	slli	s0,s0,0x3
+    805e18ba:	175e                	slli	a4,a4,0x37
+    805e18bc:	8c59                	or	s0,s0,a4
+    805e18be:	c0178793          	addi	a5,a5,-1023
+    805e18c2:	4701                	li	a4,0
+    805e18c4:	002b1693          	slli	a3,s6,0x2
+    805e18c8:	8ed9                	or	a3,a3,a4
+    805e18ca:	40f989b3          	sub	s3,s3,a5
+    805e18ce:	16fd                	addi	a3,a3,-1
+    805e18d0:	47b9                	li	a5,14
+    805e18d2:	017ac633          	xor	a2,s5,s7
+    805e18d6:	06d7e663          	bltu	a5,a3,805e1942 <__divdf3+0x132>
+    805e18da:	00001597          	auipc	a1,0x1
+    805e18de:	c5e58593          	addi	a1,a1,-930 # 805e2538 <uart+0x18>
+    805e18e2:	068a                	slli	a3,a3,0x2
+    805e18e4:	96ae                	add	a3,a3,a1
+    805e18e6:	429c                	lw	a5,0(a3)
+    805e18e8:	97ae                	add	a5,a5,a1
+    805e18ea:	8782                	jr	a5
+    805e18ec:	4981                	li	s3,0
+    805e18ee:	4b05                	li	s6,1
+    805e18f0:	b7bd                	j	805e185e <__divdf3+0x4e>
+    805e18f2:	7ff00993          	li	s3,2047
+    805e18f6:	4b09                	li	s6,2
+    805e18f8:	b79d                	j	805e185e <__divdf3+0x4e>
+    805e18fa:	c80d                	beqz	s0,805e192c <__divdf3+0x11c>
+    805e18fc:	8522                	mv	a0,s0
+    805e18fe:	00000097          	auipc	ra,0x0
+    805e1902:	6e8080e7          	jalr	1768(ra) # 805e1fe6 <__clzdi2>
+    805e1906:	2501                	sext.w	a0,a0
+    805e1908:	ff85079b          	addiw	a5,a0,-8
+    805e190c:	00f41433          	sll	s0,s0,a5
+    805e1910:	c0d00793          	li	a5,-1011
+    805e1914:	8f89                	sub	a5,a5,a0
+    805e1916:	b775                	j	805e18c2 <__divdf3+0xb2>
+    805e1918:	cc09                	beqz	s0,805e1932 <__divdf3+0x122>
+    805e191a:	00c41793          	slli	a5,s0,0xc
+    805e191e:	0007ce63          	bltz	a5,805e193a <__divdf3+0x12a>
+    805e1922:	7ff00793          	li	a5,2047
+    805e1926:	470d                	li	a4,3
+    805e1928:	44c1                	li	s1,16
+    805e192a:	bf69                	j	805e18c4 <__divdf3+0xb4>
+    805e192c:	4781                	li	a5,0
+    805e192e:	4705                	li	a4,1
+    805e1930:	bf51                	j	805e18c4 <__divdf3+0xb4>
+    805e1932:	7ff00793          	li	a5,2047
+    805e1936:	4709                	li	a4,2
+    805e1938:	b771                	j	805e18c4 <__divdf3+0xb4>
+    805e193a:	7ff00793          	li	a5,2047
+    805e193e:	470d                	li	a4,3
+    805e1940:	b751                	j	805e18c4 <__divdf3+0xb4>
+    805e1942:	00841513          	slli	a0,s0,0x8
+    805e1946:	10897863          	bleu	s0,s2,805e1a56 <__divdf3+0x246>
+    805e194a:	19fd                	addi	s3,s3,-1
+    805e194c:	4681                	li	a3,0
+    805e194e:	02055413          	srli	s0,a0,0x20
+    805e1952:	028958b3          	divu	a7,s2,s0
+    805e1956:	57fd                	li	a5,-1
+    805e1958:	9381                	srli	a5,a5,0x20
+    805e195a:	8fe9                	and	a5,a5,a0
+    805e195c:	9281                	srli	a3,a3,0x20
+    805e195e:	02897733          	remu	a4,s2,s0
+    805e1962:	85c6                	mv	a1,a7
+    805e1964:	03178833          	mul	a6,a5,a7
+    805e1968:	1702                	slli	a4,a4,0x20
+    805e196a:	8f55                	or	a4,a4,a3
+    805e196c:	01077c63          	bleu	a6,a4,805e1984 <__divdf3+0x174>
+    805e1970:	972a                	add	a4,a4,a0
+    805e1972:	fff88593          	addi	a1,a7,-1
+    805e1976:	00a76763          	bltu	a4,a0,805e1984 <__divdf3+0x174>
+    805e197a:	01077563          	bleu	a6,a4,805e1984 <__divdf3+0x174>
+    805e197e:	ffe88593          	addi	a1,a7,-2
+    805e1982:	972a                	add	a4,a4,a0
+    805e1984:	41070733          	sub	a4,a4,a6
+    805e1988:	02875833          	divu	a6,a4,s0
+    805e198c:	02877733          	remu	a4,a4,s0
+    805e1990:	030786b3          	mul	a3,a5,a6
+    805e1994:	02071793          	slli	a5,a4,0x20
+    805e1998:	8742                	mv	a4,a6
+    805e199a:	00d7fc63          	bleu	a3,a5,805e19b2 <__divdf3+0x1a2>
+    805e199e:	97aa                	add	a5,a5,a0
+    805e19a0:	fff80713          	addi	a4,a6,-1
+    805e19a4:	00a7e763          	bltu	a5,a0,805e19b2 <__divdf3+0x1a2>
+    805e19a8:	00d7f563          	bleu	a3,a5,805e19b2 <__divdf3+0x1a2>
+    805e19ac:	ffe80713          	addi	a4,a6,-2
+    805e19b0:	97aa                	add	a5,a5,a0
+    805e19b2:	02059413          	slli	s0,a1,0x20
+    805e19b6:	8f95                	sub	a5,a5,a3
+    805e19b8:	8c59                	or	s0,s0,a4
+    805e19ba:	00f037b3          	snez	a5,a5
+    805e19be:	8c5d                	or	s0,s0,a5
+    805e19c0:	3ff98793          	addi	a5,s3,1023
+    805e19c4:	0ef05563          	blez	a5,805e1aae <__divdf3+0x29e>
+    805e19c8:	00747713          	andi	a4,s0,7
+    805e19cc:	c30d                	beqz	a4,805e19ee <__divdf3+0x1de>
+    805e19ce:	4709                	li	a4,2
+    805e19d0:	0014e493          	ori	s1,s1,1
+    805e19d4:	0cea0463          	beq	s4,a4,805e1a9c <__divdf3+0x28c>
+    805e19d8:	470d                	li	a4,3
+    805e19da:	0aea0e63          	beq	s4,a4,805e1a96 <__divdf3+0x286>
+    805e19de:	000a1863          	bnez	s4,805e19ee <__divdf3+0x1de>
+    805e19e2:	00f47713          	andi	a4,s0,15
+    805e19e6:	4691                	li	a3,4
+    805e19e8:	00d70363          	beq	a4,a3,805e19ee <__divdf3+0x1de>
+    805e19ec:	0411                	addi	s0,s0,4
+    805e19ee:	00741713          	slli	a4,s0,0x7
+    805e19f2:	00075863          	bgez	a4,805e1a02 <__divdf3+0x1f2>
+    805e19f6:	57fd                	li	a5,-1
+    805e19f8:	17e2                	slli	a5,a5,0x38
+    805e19fa:	17fd                	addi	a5,a5,-1
+    805e19fc:	8c7d                	and	s0,s0,a5
+    805e19fe:	40098793          	addi	a5,s3,1024
+    805e1a02:	7fe00713          	li	a4,2046
+    805e1a06:	800d                	srli	s0,s0,0x3
+    805e1a08:	00f75f63          	ble	a5,a4,805e1a26 <__divdf3+0x216>
+    805e1a0c:	4789                	li	a5,2
+    805e1a0e:	08fa0e63          	beq	s4,a5,805e1aaa <__divdf3+0x29a>
+    805e1a12:	478d                	li	a5,3
+    805e1a14:	08fa0663          	beq	s4,a5,805e1aa0 <__divdf3+0x290>
+    805e1a18:	080a0563          	beqz	s4,805e1aa2 <__divdf3+0x292>
+    805e1a1c:	547d                	li	s0,-1
+    805e1a1e:	7fe00793          	li	a5,2046
+    805e1a22:	0054e493          	ori	s1,s1,5
+    805e1a26:	557d                	li	a0,-1
+    805e1a28:	7ff7f793          	andi	a5,a5,2047
+    805e1a2c:	8131                	srli	a0,a0,0xc
+    805e1a2e:	8d61                	and	a0,a0,s0
+    805e1a30:	17d2                	slli	a5,a5,0x34
+    805e1a32:	03f61413          	slli	s0,a2,0x3f
+    805e1a36:	8d5d                	or	a0,a0,a5
+    805e1a38:	8d41                	or	a0,a0,s0
+    805e1a3a:	c099                	beqz	s1,805e1a40 <__divdf3+0x230>
+    805e1a3c:	0014a073          	csrs	fflags,s1
+    805e1a40:	60a6                	ld	ra,72(sp)
+    805e1a42:	6406                	ld	s0,64(sp)
+    805e1a44:	74e2                	ld	s1,56(sp)
+    805e1a46:	7942                	ld	s2,48(sp)
+    805e1a48:	79a2                	ld	s3,40(sp)
+    805e1a4a:	7a02                	ld	s4,32(sp)
+    805e1a4c:	6ae2                	ld	s5,24(sp)
+    805e1a4e:	6b42                	ld	s6,16(sp)
+    805e1a50:	6ba2                	ld	s7,8(sp)
+    805e1a52:	6161                	addi	sp,sp,80
+    805e1a54:	8082                	ret
+    805e1a56:	03f91693          	slli	a3,s2,0x3f
+    805e1a5a:	00195913          	srli	s2,s2,0x1
+    805e1a5e:	bdc5                	j	805e194e <__divdf3+0x13e>
+    805e1a60:	8656                	mv	a2,s5
+    805e1a62:	844a                	mv	s0,s2
+    805e1a64:	875a                	mv	a4,s6
+    805e1a66:	4789                	li	a5,2
+    805e1a68:	00f70e63          	beq	a4,a5,805e1a84 <__divdf3+0x274>
+    805e1a6c:	478d                	li	a5,3
+    805e1a6e:	14f70263          	beq	a4,a5,805e1bb2 <__divdf3+0x3a2>
+    805e1a72:	4785                	li	a5,1
+    805e1a74:	f4f716e3          	bne	a4,a5,805e19c0 <__divdf3+0x1b0>
+    805e1a78:	4401                	li	s0,0
+    805e1a7a:	a205                	j	805e1b9a <__divdf3+0x38a>
+    805e1a7c:	865e                	mv	a2,s7
+    805e1a7e:	b7e5                	j	805e1a66 <__divdf3+0x256>
+    805e1a80:	0084e493          	ori	s1,s1,8
+    805e1a84:	4401                	li	s0,0
+    805e1a86:	7ff00793          	li	a5,2047
+    805e1a8a:	bf71                	j	805e1a26 <__divdf3+0x216>
+    805e1a8c:	4405                	li	s0,1
+    805e1a8e:	144e                	slli	s0,s0,0x33
+    805e1a90:	4601                	li	a2,0
+    805e1a92:	470d                	li	a4,3
+    805e1a94:	bfc9                	j	805e1a66 <__divdf3+0x256>
+    805e1a96:	fe21                	bnez	a2,805e19ee <__divdf3+0x1de>
+    805e1a98:	0421                	addi	s0,s0,8
+    805e1a9a:	bf91                	j	805e19ee <__divdf3+0x1de>
+    805e1a9c:	da29                	beqz	a2,805e19ee <__divdf3+0x1de>
+    805e1a9e:	bfed                	j	805e1a98 <__divdf3+0x288>
+    805e1aa0:	fe35                	bnez	a2,805e1a1c <__divdf3+0x20c>
+    805e1aa2:	4401                	li	s0,0
+    805e1aa4:	7ff00793          	li	a5,2047
+    805e1aa8:	bfad                	j	805e1a22 <__divdf3+0x212>
+    805e1aaa:	fe65                	bnez	a2,805e1aa2 <__divdf3+0x292>
+    805e1aac:	bf85                	j	805e1a1c <__divdf3+0x20c>
+    805e1aae:	4705                	li	a4,1
+    805e1ab0:	eb9d                	bnez	a5,805e1ae6 <__divdf3+0x2d6>
+    805e1ab2:	00747693          	andi	a3,s0,7
+    805e1ab6:	8722                	mv	a4,s0
+    805e1ab8:	c29d                	beqz	a3,805e1ade <__divdf3+0x2ce>
+    805e1aba:	4709                	li	a4,2
+    805e1abc:	0014e493          	ori	s1,s1,1
+    805e1ac0:	08ea0b63          	beq	s4,a4,805e1b56 <__divdf3+0x346>
+    805e1ac4:	470d                	li	a4,3
+    805e1ac6:	08ea0363          	beq	s4,a4,805e1b4c <__divdf3+0x33c>
+    805e1aca:	8722                	mv	a4,s0
+    805e1acc:	000a1963          	bnez	s4,805e1ade <__divdf3+0x2ce>
+    805e1ad0:	00f47693          	andi	a3,s0,15
+    805e1ad4:	4591                	li	a1,4
+    805e1ad6:	00b68463          	beq	a3,a1,805e1ade <__divdf3+0x2ce>
+    805e1ada:	00440713          	addi	a4,s0,4
+    805e1ade:	9361                	srli	a4,a4,0x38
+    805e1ae0:	00174713          	xori	a4,a4,1
+    805e1ae4:	8b05                	andi	a4,a4,1
+    805e1ae6:	4505                	li	a0,1
+    805e1ae8:	40f507b3          	sub	a5,a0,a5
+    805e1aec:	03800693          	li	a3,56
+    805e1af0:	08f6c263          	blt	a3,a5,805e1b74 <__divdf3+0x364>
+    805e1af4:	0007851b          	sext.w	a0,a5
+    805e1af8:	04000793          	li	a5,64
+    805e1afc:	9f89                	subw	a5,a5,a0
+    805e1afe:	00a456b3          	srl	a3,s0,a0
+    805e1b02:	00f41433          	sll	s0,s0,a5
+    805e1b06:	00803433          	snez	s0,s0
+    805e1b0a:	8c55                	or	s0,s0,a3
+    805e1b0c:	00747793          	andi	a5,s0,7
+    805e1b10:	c38d                	beqz	a5,805e1b32 <__divdf3+0x322>
+    805e1b12:	4789                	li	a5,2
+    805e1b14:	0014e493          	ori	s1,s1,1
+    805e1b18:	04fa0563          	beq	s4,a5,805e1b62 <__divdf3+0x352>
+    805e1b1c:	478d                	li	a5,3
+    805e1b1e:	02fa0f63          	beq	s4,a5,805e1b5c <__divdf3+0x34c>
+    805e1b22:	000a1863          	bnez	s4,805e1b32 <__divdf3+0x322>
+    805e1b26:	00f47793          	andi	a5,s0,15
+    805e1b2a:	4691                	li	a3,4
+    805e1b2c:	00d78363          	beq	a5,a3,805e1b32 <__divdf3+0x322>
+    805e1b30:	0411                	addi	s0,s0,4
+    805e1b32:	00841793          	slli	a5,s0,0x8
+    805e1b36:	0207d863          	bgez	a5,805e1b66 <__divdf3+0x356>
+    805e1b3a:	0014e493          	ori	s1,s1,1
+    805e1b3e:	4401                	li	s0,0
+    805e1b40:	4785                	li	a5,1
+    805e1b42:	ee0702e3          	beqz	a4,805e1a26 <__divdf3+0x216>
+    805e1b46:	0024e493          	ori	s1,s1,2
+    805e1b4a:	bdf1                	j	805e1a26 <__divdf3+0x216>
+    805e1b4c:	8722                	mv	a4,s0
+    805e1b4e:	fa41                	bnez	a2,805e1ade <__divdf3+0x2ce>
+    805e1b50:	00840713          	addi	a4,s0,8
+    805e1b54:	b769                	j	805e1ade <__divdf3+0x2ce>
+    805e1b56:	8722                	mv	a4,s0
+    805e1b58:	d259                	beqz	a2,805e1ade <__divdf3+0x2ce>
+    805e1b5a:	bfdd                	j	805e1b50 <__divdf3+0x340>
+    805e1b5c:	fa79                	bnez	a2,805e1b32 <__divdf3+0x322>
+    805e1b5e:	0421                	addi	s0,s0,8
+    805e1b60:	bfc9                	j	805e1b32 <__divdf3+0x322>
+    805e1b62:	da61                	beqz	a2,805e1b32 <__divdf3+0x322>
+    805e1b64:	bfed                	j	805e1b5e <__divdf3+0x34e>
+    805e1b66:	800d                	srli	s0,s0,0x3
+    805e1b68:	4781                	li	a5,0
+    805e1b6a:	ea070ee3          	beqz	a4,805e1a26 <__divdf3+0x216>
+    805e1b6e:	0014f713          	andi	a4,s1,1
+    805e1b72:	bfc1                	j	805e1b42 <__divdf3+0x332>
+    805e1b74:	c00d                	beqz	s0,805e1b96 <__divdf3+0x386>
+    805e1b76:	4789                	li	a5,2
+    805e1b78:	0014e493          	ori	s1,s1,1
+    805e1b7c:	02fa0163          	beq	s4,a5,805e1b9e <__divdf3+0x38e>
+    805e1b80:	478d                	li	a5,3
+    805e1b82:	00fa0763          	beq	s4,a5,805e1b90 <__divdf3+0x380>
+    805e1b86:	4415                	li	s0,5
+    805e1b88:	000a0663          	beqz	s4,805e1b94 <__divdf3+0x384>
+    805e1b8c:	4405                	li	s0,1
+    805e1b8e:	a019                	j	805e1b94 <__divdf3+0x384>
+    805e1b90:	4425                	li	s0,9
+    805e1b92:	fe6d                	bnez	a2,805e1b8c <__divdf3+0x37c>
+    805e1b94:	800d                	srli	s0,s0,0x3
+    805e1b96:	0024e493          	ori	s1,s1,2
+    805e1b9a:	4781                	li	a5,0
+    805e1b9c:	b569                	j	805e1a26 <__divdf3+0x216>
+    805e1b9e:	4425                	li	s0,9
+    805e1ba0:	fa75                	bnez	a2,805e1b94 <__divdf3+0x384>
+    805e1ba2:	b7ed                	j	805e1b8c <__divdf3+0x37c>
+    805e1ba4:	4405                	li	s0,1
+    805e1ba6:	144e                	slli	s0,s0,0x33
+    805e1ba8:	7ff00793          	li	a5,2047
+    805e1bac:	4601                	li	a2,0
+    805e1bae:	44c1                	li	s1,16
+    805e1bb0:	bd9d                	j	805e1a26 <__divdf3+0x216>
+    805e1bb2:	4405                	li	s0,1
+    805e1bb4:	144e                	slli	s0,s0,0x33
+    805e1bb6:	7ff00793          	li	a5,2047
+    805e1bba:	4601                	li	a2,0
+    805e1bbc:	b5ad                	j	805e1a26 <__divdf3+0x216>
+
+00000000805e1bbe <__muldf3>:
+    805e1bbe:	715d                	addi	sp,sp,-80
+    805e1bc0:	e45e                	sd	s7,8(sp)
+    805e1bc2:	e486                	sd	ra,72(sp)
+    805e1bc4:	e0a2                	sd	s0,64(sp)
+    805e1bc6:	fc26                	sd	s1,56(sp)
+    805e1bc8:	f84a                	sd	s2,48(sp)
+    805e1bca:	f44e                	sd	s3,40(sp)
+    805e1bcc:	f052                	sd	s4,32(sp)
+    805e1bce:	ec56                	sd	s5,24(sp)
+    805e1bd0:	e85a                	sd	s6,16(sp)
+    805e1bd2:	8bae                	mv	s7,a1
+    805e1bd4:	00202af3          	frrm	s5
+    805e1bd8:	54fd                	li	s1,-1
+    805e1bda:	03455913          	srli	s2,a0,0x34
+    805e1bde:	80b1                	srli	s1,s1,0xc
+    805e1be0:	7ff97913          	andi	s2,s2,2047
+    805e1be4:	2a81                	sext.w	s5,s5
+    805e1be6:	8ce9                	and	s1,s1,a0
+    805e1be8:	03f55993          	srli	s3,a0,0x3f
+    805e1bec:	00090f63          	beqz	s2,805e1c0a <__muldf3+0x4c>
+    805e1bf0:	7ff00793          	li	a5,2047
+    805e1bf4:	02f90b63          	beq	s2,a5,805e1c2a <__muldf3+0x6c>
+    805e1bf8:	4785                	li	a5,1
+    805e1bfa:	048e                	slli	s1,s1,0x3
+    805e1bfc:	17de                	slli	a5,a5,0x37
+    805e1bfe:	8cdd                	or	s1,s1,a5
+    805e1c00:	c0190913          	addi	s2,s2,-1023
+    805e1c04:	4b01                	li	s6,0
+    805e1c06:	4a01                	li	s4,0
+    805e1c08:	a815                	j	805e1c3c <__muldf3+0x7e>
+    805e1c0a:	c4c1                	beqz	s1,805e1c92 <__muldf3+0xd4>
+    805e1c0c:	8526                	mv	a0,s1
+    805e1c0e:	00000097          	auipc	ra,0x0
+    805e1c12:	3d8080e7          	jalr	984(ra) # 805e1fe6 <__clzdi2>
+    805e1c16:	2501                	sext.w	a0,a0
+    805e1c18:	ff85079b          	addiw	a5,a0,-8
+    805e1c1c:	c0d00913          	li	s2,-1011
+    805e1c20:	00f494b3          	sll	s1,s1,a5
+    805e1c24:	40a90933          	sub	s2,s2,a0
+    805e1c28:	bff1                	j	805e1c04 <__muldf3+0x46>
+    805e1c2a:	c4bd                	beqz	s1,805e1c98 <__muldf3+0xda>
+    805e1c2c:	00c49793          	slli	a5,s1,0xc
+    805e1c30:	7ff00913          	li	s2,2047
+    805e1c34:	4b0d                	li	s6,3
+    805e1c36:	4a41                	li	s4,16
+    805e1c38:	fc07c7e3          	bltz	a5,805e1c06 <__muldf3+0x48>
+    805e1c3c:	034bd793          	srli	a5,s7,0x34
+    805e1c40:	547d                	li	s0,-1
+    805e1c42:	8031                	srli	s0,s0,0xc
+    805e1c44:	7ff7f793          	andi	a5,a5,2047
+    805e1c48:	01747433          	and	s0,s0,s7
+    805e1c4c:	03fbdb93          	srli	s7,s7,0x3f
+    805e1c50:	cba1                	beqz	a5,805e1ca0 <__muldf3+0xe2>
+    805e1c52:	7ff00713          	li	a4,2047
+    805e1c56:	06e78463          	beq	a5,a4,805e1cbe <__muldf3+0x100>
+    805e1c5a:	4705                	li	a4,1
+    805e1c5c:	040e                	slli	s0,s0,0x3
+    805e1c5e:	175e                	slli	a4,a4,0x37
+    805e1c60:	8c59                	or	s0,s0,a4
+    805e1c62:	c0178793          	addi	a5,a5,-1023
+    805e1c66:	4701                	li	a4,0
+    805e1c68:	002b1693          	slli	a3,s6,0x2
+    805e1c6c:	8ed9                	or	a3,a3,a4
+    805e1c6e:	97ca                	add	a5,a5,s2
+    805e1c70:	16fd                	addi	a3,a3,-1
+    805e1c72:	45b9                	li	a1,14
+    805e1c74:	0179c633          	xor	a2,s3,s7
+    805e1c78:	00178813          	addi	a6,a5,1
+    805e1c7c:	0ad5e563          	bltu	a1,a3,805e1d26 <__muldf3+0x168>
+    805e1c80:	00001597          	auipc	a1,0x1
+    805e1c84:	8f458593          	addi	a1,a1,-1804 # 805e2574 <uart+0x54>
+    805e1c88:	068a                	slli	a3,a3,0x2
+    805e1c8a:	96ae                	add	a3,a3,a1
+    805e1c8c:	429c                	lw	a5,0(a3)
+    805e1c8e:	97ae                	add	a5,a5,a1
+    805e1c90:	8782                	jr	a5
+    805e1c92:	4901                	li	s2,0
+    805e1c94:	4b05                	li	s6,1
+    805e1c96:	bf85                	j	805e1c06 <__muldf3+0x48>
+    805e1c98:	7ff00913          	li	s2,2047
+    805e1c9c:	4b09                	li	s6,2
+    805e1c9e:	b7a5                	j	805e1c06 <__muldf3+0x48>
+    805e1ca0:	c80d                	beqz	s0,805e1cd2 <__muldf3+0x114>
+    805e1ca2:	8522                	mv	a0,s0
+    805e1ca4:	00000097          	auipc	ra,0x0
+    805e1ca8:	342080e7          	jalr	834(ra) # 805e1fe6 <__clzdi2>
+    805e1cac:	2501                	sext.w	a0,a0
+    805e1cae:	ff85079b          	addiw	a5,a0,-8
+    805e1cb2:	00f41433          	sll	s0,s0,a5
+    805e1cb6:	c0d00793          	li	a5,-1011
+    805e1cba:	8f89                	sub	a5,a5,a0
+    805e1cbc:	b76d                	j	805e1c66 <__muldf3+0xa8>
+    805e1cbe:	cc09                	beqz	s0,805e1cd8 <__muldf3+0x11a>
+    805e1cc0:	00c41793          	slli	a5,s0,0xc
+    805e1cc4:	0007ce63          	bltz	a5,805e1ce0 <__muldf3+0x122>
+    805e1cc8:	7ff00793          	li	a5,2047
+    805e1ccc:	470d                	li	a4,3
+    805e1cce:	4a41                	li	s4,16
+    805e1cd0:	bf61                	j	805e1c68 <__muldf3+0xaa>
+    805e1cd2:	4781                	li	a5,0
+    805e1cd4:	4705                	li	a4,1
+    805e1cd6:	bf49                	j	805e1c68 <__muldf3+0xaa>
+    805e1cd8:	7ff00793          	li	a5,2047
+    805e1cdc:	4709                	li	a4,2
+    805e1cde:	b769                	j	805e1c68 <__muldf3+0xaa>
+    805e1ce0:	7ff00793          	li	a5,2047
+    805e1ce4:	470d                	li	a4,3
+    805e1ce6:	b749                	j	805e1c68 <__muldf3+0xaa>
+    805e1ce8:	4405                	li	s0,1
+    805e1cea:	144e                	slli	s0,s0,0x33
+    805e1cec:	7ff00793          	li	a5,2047
+    805e1cf0:	4601                	li	a2,0
+    805e1cf2:	4a41                	li	s4,16
+    805e1cf4:	557d                	li	a0,-1
+    805e1cf6:	7ff7f793          	andi	a5,a5,2047
+    805e1cfa:	8131                	srli	a0,a0,0xc
+    805e1cfc:	8d61                	and	a0,a0,s0
+    805e1cfe:	17d2                	slli	a5,a5,0x34
+    805e1d00:	03f61413          	slli	s0,a2,0x3f
+    805e1d04:	8d5d                	or	a0,a0,a5
+    805e1d06:	8d41                	or	a0,a0,s0
+    805e1d08:	000a0463          	beqz	s4,805e1d10 <__muldf3+0x152>
+    805e1d0c:	001a2073          	csrs	fflags,s4
+    805e1d10:	60a6                	ld	ra,72(sp)
+    805e1d12:	6406                	ld	s0,64(sp)
+    805e1d14:	74e2                	ld	s1,56(sp)
+    805e1d16:	7942                	ld	s2,48(sp)
+    805e1d18:	79a2                	ld	s3,40(sp)
+    805e1d1a:	7a02                	ld	s4,32(sp)
+    805e1d1c:	6ae2                	ld	s5,24(sp)
+    805e1d1e:	6b42                	ld	s6,16(sp)
+    805e1d20:	6ba2                	ld	s7,8(sp)
+    805e1d22:	6161                	addi	sp,sp,80
+    805e1d24:	8082                	ret
+    805e1d26:	577d                	li	a4,-1
+    805e1d28:	9301                	srli	a4,a4,0x20
+    805e1d2a:	0204d693          	srli	a3,s1,0x20
+    805e1d2e:	02045593          	srli	a1,s0,0x20
+    805e1d32:	8cf9                	and	s1,s1,a4
+    805e1d34:	8c79                	and	s0,s0,a4
+    805e1d36:	02940533          	mul	a0,s0,s1
+    805e1d3a:	02868433          	mul	s0,a3,s0
+    805e1d3e:	02b686b3          	mul	a3,a3,a1
+    805e1d42:	029585b3          	mul	a1,a1,s1
+    805e1d46:	02055493          	srli	s1,a0,0x20
+    805e1d4a:	95a2                	add	a1,a1,s0
+    805e1d4c:	94ae                	add	s1,s1,a1
+    805e1d4e:	0084f563          	bleu	s0,s1,805e1d58 <__muldf3+0x19a>
+    805e1d52:	4705                	li	a4,1
+    805e1d54:	1702                	slli	a4,a4,0x20
+    805e1d56:	96ba                	add	a3,a3,a4
+    805e1d58:	547d                	li	s0,-1
+    805e1d5a:	9001                	srli	s0,s0,0x20
+    805e1d5c:	0084f733          	and	a4,s1,s0
+    805e1d60:	8d61                	and	a0,a0,s0
+    805e1d62:	1702                	slli	a4,a4,0x20
+    805e1d64:	972a                	add	a4,a4,a0
+    805e1d66:	00971413          	slli	s0,a4,0x9
+    805e1d6a:	9081                	srli	s1,s1,0x20
+    805e1d6c:	00803433          	snez	s0,s0
+    805e1d70:	935d                	srli	a4,a4,0x37
+    805e1d72:	94b6                	add	s1,s1,a3
+    805e1d74:	8f41                	or	a4,a4,s0
+    805e1d76:	04a6                	slli	s1,s1,0x9
+    805e1d78:	00e4e433          	or	s0,s1,a4
+    805e1d7c:	00741713          	slli	a4,s0,0x7
+    805e1d80:	08075a63          	bgez	a4,805e1e14 <__muldf3+0x256>
+    805e1d84:	00145793          	srli	a5,s0,0x1
+    805e1d88:	8805                	andi	s0,s0,1
+    805e1d8a:	8c5d                	or	s0,s0,a5
+    805e1d8c:	3ff80793          	addi	a5,a6,1023
+    805e1d90:	0af05063          	blez	a5,805e1e30 <__muldf3+0x272>
+    805e1d94:	00747713          	andi	a4,s0,7
+    805e1d98:	c30d                	beqz	a4,805e1dba <__muldf3+0x1fc>
+    805e1d9a:	4709                	li	a4,2
+    805e1d9c:	001a6a13          	ori	s4,s4,1
+    805e1da0:	06ea8f63          	beq	s5,a4,805e1e1e <__muldf3+0x260>
+    805e1da4:	470d                	li	a4,3
+    805e1da6:	06ea8963          	beq	s5,a4,805e1e18 <__muldf3+0x25a>
+    805e1daa:	000a9863          	bnez	s5,805e1dba <__muldf3+0x1fc>
+    805e1dae:	00f47713          	andi	a4,s0,15
+    805e1db2:	4691                	li	a3,4
+    805e1db4:	00d70363          	beq	a4,a3,805e1dba <__muldf3+0x1fc>
+    805e1db8:	0411                	addi	s0,s0,4
+    805e1dba:	00741713          	slli	a4,s0,0x7
+    805e1dbe:	00075863          	bgez	a4,805e1dce <__muldf3+0x210>
+    805e1dc2:	57fd                	li	a5,-1
+    805e1dc4:	17e2                	slli	a5,a5,0x38
+    805e1dc6:	17fd                	addi	a5,a5,-1
+    805e1dc8:	8c7d                	and	s0,s0,a5
+    805e1dca:	40080793          	addi	a5,a6,1024
+    805e1dce:	7fe00713          	li	a4,2046
+    805e1dd2:	800d                	srli	s0,s0,0x3
+    805e1dd4:	f2f750e3          	ble	a5,a4,805e1cf4 <__muldf3+0x136>
+    805e1dd8:	4789                	li	a5,2
+    805e1dda:	04fa8963          	beq	s5,a5,805e1e2c <__muldf3+0x26e>
+    805e1dde:	478d                	li	a5,3
+    805e1de0:	04fa8163          	beq	s5,a5,805e1e22 <__muldf3+0x264>
+    805e1de4:	040a8063          	beqz	s5,805e1e24 <__muldf3+0x266>
+    805e1de8:	547d                	li	s0,-1
+    805e1dea:	7fe00793          	li	a5,2046
+    805e1dee:	005a6a13          	ori	s4,s4,5
+    805e1df2:	b709                	j	805e1cf4 <__muldf3+0x136>
+    805e1df4:	864e                	mv	a2,s3
+    805e1df6:	8426                	mv	s0,s1
+    805e1df8:	875a                	mv	a4,s6
+    805e1dfa:	4789                	li	a5,2
+    805e1dfc:	12f70563          	beq	a4,a5,805e1f26 <__muldf3+0x368>
+    805e1e00:	478d                	li	a5,3
+    805e1e02:	12f70663          	beq	a4,a5,805e1f2e <__muldf3+0x370>
+    805e1e06:	4785                	li	a5,1
+    805e1e08:	f8f712e3          	bne	a4,a5,805e1d8c <__muldf3+0x1ce>
+    805e1e0c:	4401                	li	s0,0
+    805e1e0e:	a239                	j	805e1f1c <__muldf3+0x35e>
+    805e1e10:	865e                	mv	a2,s7
+    805e1e12:	b7e5                	j	805e1dfa <__muldf3+0x23c>
+    805e1e14:	883e                	mv	a6,a5
+    805e1e16:	bf9d                	j	805e1d8c <__muldf3+0x1ce>
+    805e1e18:	f24d                	bnez	a2,805e1dba <__muldf3+0x1fc>
+    805e1e1a:	0421                	addi	s0,s0,8
+    805e1e1c:	bf79                	j	805e1dba <__muldf3+0x1fc>
+    805e1e1e:	de51                	beqz	a2,805e1dba <__muldf3+0x1fc>
+    805e1e20:	bfed                	j	805e1e1a <__muldf3+0x25c>
+    805e1e22:	f279                	bnez	a2,805e1de8 <__muldf3+0x22a>
+    805e1e24:	4401                	li	s0,0
+    805e1e26:	7ff00793          	li	a5,2047
+    805e1e2a:	b7d1                	j	805e1dee <__muldf3+0x230>
+    805e1e2c:	fe65                	bnez	a2,805e1e24 <__muldf3+0x266>
+    805e1e2e:	bf6d                	j	805e1de8 <__muldf3+0x22a>
+    805e1e30:	4705                	li	a4,1
+    805e1e32:	eb9d                	bnez	a5,805e1e68 <__muldf3+0x2aa>
+    805e1e34:	00747693          	andi	a3,s0,7
+    805e1e38:	8722                	mv	a4,s0
+    805e1e3a:	c29d                	beqz	a3,805e1e60 <__muldf3+0x2a2>
+    805e1e3c:	4709                	li	a4,2
+    805e1e3e:	001a6a13          	ori	s4,s4,1
+    805e1e42:	08ea8b63          	beq	s5,a4,805e1ed8 <__muldf3+0x31a>
+    805e1e46:	470d                	li	a4,3
+    805e1e48:	08ea8363          	beq	s5,a4,805e1ece <__muldf3+0x310>
+    805e1e4c:	8722                	mv	a4,s0
+    805e1e4e:	000a9963          	bnez	s5,805e1e60 <__muldf3+0x2a2>
+    805e1e52:	00f47693          	andi	a3,s0,15
+    805e1e56:	4591                	li	a1,4
+    805e1e58:	00b68463          	beq	a3,a1,805e1e60 <__muldf3+0x2a2>
+    805e1e5c:	00440713          	addi	a4,s0,4
+    805e1e60:	9361                	srli	a4,a4,0x38
+    805e1e62:	00174713          	xori	a4,a4,1
+    805e1e66:	8b05                	andi	a4,a4,1
+    805e1e68:	4505                	li	a0,1
+    805e1e6a:	40f507b3          	sub	a5,a0,a5
+    805e1e6e:	03800693          	li	a3,56
+    805e1e72:	08f6c263          	blt	a3,a5,805e1ef6 <__muldf3+0x338>
+    805e1e76:	0007851b          	sext.w	a0,a5
+    805e1e7a:	04000793          	li	a5,64
+    805e1e7e:	9f89                	subw	a5,a5,a0
+    805e1e80:	00a456b3          	srl	a3,s0,a0
+    805e1e84:	00f41433          	sll	s0,s0,a5
+    805e1e88:	00803433          	snez	s0,s0
+    805e1e8c:	8c55                	or	s0,s0,a3
+    805e1e8e:	00747793          	andi	a5,s0,7
+    805e1e92:	c38d                	beqz	a5,805e1eb4 <__muldf3+0x2f6>
+    805e1e94:	4789                	li	a5,2
+    805e1e96:	001a6a13          	ori	s4,s4,1
+    805e1e9a:	04fa8563          	beq	s5,a5,805e1ee4 <__muldf3+0x326>
+    805e1e9e:	478d                	li	a5,3
+    805e1ea0:	02fa8f63          	beq	s5,a5,805e1ede <__muldf3+0x320>
+    805e1ea4:	000a9863          	bnez	s5,805e1eb4 <__muldf3+0x2f6>
+    805e1ea8:	00f47793          	andi	a5,s0,15
+    805e1eac:	4691                	li	a3,4
+    805e1eae:	00d78363          	beq	a5,a3,805e1eb4 <__muldf3+0x2f6>
+    805e1eb2:	0411                	addi	s0,s0,4
+    805e1eb4:	00841793          	slli	a5,s0,0x8
+    805e1eb8:	0207d863          	bgez	a5,805e1ee8 <__muldf3+0x32a>
+    805e1ebc:	001a6a13          	ori	s4,s4,1
+    805e1ec0:	4401                	li	s0,0
+    805e1ec2:	4785                	li	a5,1
+    805e1ec4:	e20708e3          	beqz	a4,805e1cf4 <__muldf3+0x136>
+    805e1ec8:	002a6a13          	ori	s4,s4,2
+    805e1ecc:	b525                	j	805e1cf4 <__muldf3+0x136>
+    805e1ece:	8722                	mv	a4,s0
+    805e1ed0:	fa41                	bnez	a2,805e1e60 <__muldf3+0x2a2>
+    805e1ed2:	00840713          	addi	a4,s0,8
+    805e1ed6:	b769                	j	805e1e60 <__muldf3+0x2a2>
+    805e1ed8:	8722                	mv	a4,s0
+    805e1eda:	d259                	beqz	a2,805e1e60 <__muldf3+0x2a2>
+    805e1edc:	bfdd                	j	805e1ed2 <__muldf3+0x314>
+    805e1ede:	fa79                	bnez	a2,805e1eb4 <__muldf3+0x2f6>
+    805e1ee0:	0421                	addi	s0,s0,8
+    805e1ee2:	bfc9                	j	805e1eb4 <__muldf3+0x2f6>
+    805e1ee4:	da61                	beqz	a2,805e1eb4 <__muldf3+0x2f6>
+    805e1ee6:	bfed                	j	805e1ee0 <__muldf3+0x322>
+    805e1ee8:	800d                	srli	s0,s0,0x3
+    805e1eea:	4781                	li	a5,0
+    805e1eec:	e00704e3          	beqz	a4,805e1cf4 <__muldf3+0x136>
+    805e1ef0:	001a7713          	andi	a4,s4,1
+    805e1ef4:	bfc1                	j	805e1ec4 <__muldf3+0x306>
+    805e1ef6:	c00d                	beqz	s0,805e1f18 <__muldf3+0x35a>
+    805e1ef8:	4789                	li	a5,2
+    805e1efa:	001a6a13          	ori	s4,s4,1
+    805e1efe:	02fa8163          	beq	s5,a5,805e1f20 <__muldf3+0x362>
+    805e1f02:	478d                	li	a5,3
+    805e1f04:	00fa8763          	beq	s5,a5,805e1f12 <__muldf3+0x354>
+    805e1f08:	4415                	li	s0,5
+    805e1f0a:	000a8663          	beqz	s5,805e1f16 <__muldf3+0x358>
+    805e1f0e:	4405                	li	s0,1
+    805e1f10:	a019                	j	805e1f16 <__muldf3+0x358>
+    805e1f12:	4425                	li	s0,9
+    805e1f14:	fe6d                	bnez	a2,805e1f0e <__muldf3+0x350>
+    805e1f16:	800d                	srli	s0,s0,0x3
+    805e1f18:	002a6a13          	ori	s4,s4,2
+    805e1f1c:	4781                	li	a5,0
+    805e1f1e:	bbd9                	j	805e1cf4 <__muldf3+0x136>
+    805e1f20:	4425                	li	s0,9
+    805e1f22:	fa75                	bnez	a2,805e1f16 <__muldf3+0x358>
+    805e1f24:	b7ed                	j	805e1f0e <__muldf3+0x350>
+    805e1f26:	4401                	li	s0,0
+    805e1f28:	7ff00793          	li	a5,2047
+    805e1f2c:	b3e1                	j	805e1cf4 <__muldf3+0x136>
+    805e1f2e:	4405                	li	s0,1
+    805e1f30:	144e                	slli	s0,s0,0x33
+    805e1f32:	7ff00793          	li	a5,2047
+    805e1f36:	4601                	li	a2,0
+    805e1f38:	bb75                	j	805e1cf4 <__muldf3+0x136>
+
+00000000805e1f3a <__fixunsdfsi>:
+    805e1f3a:	002027f3          	frrm	a5
+    805e1f3e:	57fd                	li	a5,-1
+    805e1f40:	03455713          	srli	a4,a0,0x34
+    805e1f44:	83b1                	srli	a5,a5,0xc
+    805e1f46:	7ff77713          	andi	a4,a4,2047
+    805e1f4a:	3fe00693          	li	a3,1022
+    805e1f4e:	8fe9                	and	a5,a5,a0
+    805e1f50:	917d                	srli	a0,a0,0x3f
+    805e1f52:	00e6c663          	blt	a3,a4,805e1f5e <__fixunsdfsi+0x24>
+    805e1f56:	ef05                	bnez	a4,805e1f8e <__fixunsdfsi+0x54>
+    805e1f58:	eb9d                	bnez	a5,805e1f8e <__fixunsdfsi+0x54>
+    805e1f5a:	4501                	li	a0,0
+    805e1f5c:	8082                	ret
+    805e1f5e:	e91d                	bnez	a0,805e1f94 <__fixunsdfsi+0x5a>
+    805e1f60:	41e00693          	li	a3,1054
+    805e1f64:	02e6ca63          	blt	a3,a4,805e1f98 <__fixunsdfsi+0x5e>
+    805e1f68:	4685                	li	a3,1
+    805e1f6a:	2701                	sext.w	a4,a4
+    805e1f6c:	16d2                	slli	a3,a3,0x34
+    805e1f6e:	43300513          	li	a0,1075
+    805e1f72:	8fd5                	or	a5,a5,a3
+    805e1f74:	9d19                	subw	a0,a0,a4
+    805e1f76:	c0d7071b          	addiw	a4,a4,-1011
+    805e1f7a:	00a7d533          	srl	a0,a5,a0
+    805e1f7e:	00e797b3          	sll	a5,a5,a4
+    805e1f82:	2501                	sext.w	a0,a0
+    805e1f84:	cf89                	beqz	a5,805e1f9e <__fixunsdfsi+0x64>
+    805e1f86:	4785                	li	a5,1
+    805e1f88:	0017a073          	csrs	fflags,a5
+    805e1f8c:	8082                	ret
+    805e1f8e:	4785                	li	a5,1
+    805e1f90:	4501                	li	a0,0
+    805e1f92:	bfdd                	j	805e1f88 <__fixunsdfsi+0x4e>
+    805e1f94:	47c1                	li	a5,16
+    805e1f96:	bfed                	j	805e1f90 <__fixunsdfsi+0x56>
+    805e1f98:	47c1                	li	a5,16
+    805e1f9a:	557d                	li	a0,-1
+    805e1f9c:	b7f5                	j	805e1f88 <__fixunsdfsi+0x4e>
+    805e1f9e:	8082                	ret
+
+00000000805e1fa0 <__floatunsidf>:
+    805e1fa0:	1141                	addi	sp,sp,-16
+    805e1fa2:	e406                	sd	ra,8(sp)
+    805e1fa4:	e022                	sd	s0,0(sp)
+    805e1fa6:	cd0d                	beqz	a0,805e1fe0 <__floatunsidf+0x40>
+    805e1fa8:	02051413          	slli	s0,a0,0x20
+    805e1fac:	9001                	srli	s0,s0,0x20
+    805e1fae:	8522                	mv	a0,s0
+    805e1fb0:	00000097          	auipc	ra,0x0
+    805e1fb4:	036080e7          	jalr	54(ra) # 805e1fe6 <__clzdi2>
+    805e1fb8:	43e00793          	li	a5,1086
+    805e1fbc:	9f89                	subw	a5,a5,a0
+    805e1fbe:	43300713          	li	a4,1075
+    805e1fc2:	40f7053b          	subw	a0,a4,a5
+    805e1fc6:	00a41433          	sll	s0,s0,a0
+    805e1fca:	7ff7f513          	andi	a0,a5,2047
+    805e1fce:	57fd                	li	a5,-1
+    805e1fd0:	83b1                	srli	a5,a5,0xc
+    805e1fd2:	8c7d                	and	s0,s0,a5
+    805e1fd4:	1552                	slli	a0,a0,0x34
+    805e1fd6:	8d41                	or	a0,a0,s0
+    805e1fd8:	60a2                	ld	ra,8(sp)
+    805e1fda:	6402                	ld	s0,0(sp)
+    805e1fdc:	0141                	addi	sp,sp,16
+    805e1fde:	8082                	ret
+    805e1fe0:	4401                	li	s0,0
+    805e1fe2:	4781                	li	a5,0
+    805e1fe4:	b7dd                	j	805e1fca <__floatunsidf+0x2a>
+
+00000000805e1fe6 <__clzdi2>:
+    805e1fe6:	03800793          	li	a5,56
+    805e1fea:	00f55733          	srl	a4,a0,a5
+    805e1fee:	0ff77713          	andi	a4,a4,255
+    805e1ff2:	e319                	bnez	a4,805e1ff8 <__clzdi2+0x12>
+    805e1ff4:	17e1                	addi	a5,a5,-8
+    805e1ff6:	fbf5                	bnez	a5,805e1fea <__clzdi2+0x4>
+    805e1ff8:	04000713          	li	a4,64
+    805e1ffc:	8f1d                	sub	a4,a4,a5
+    805e1ffe:	00f557b3          	srl	a5,a0,a5
+    805e2002:	00000517          	auipc	a0,0x0
+    805e2006:	5ae50513          	addi	a0,a0,1454 # 805e25b0 <__clz_tab>
+    805e200a:	97aa                	add	a5,a5,a0
+    805e200c:	0007c503          	lbu	a0,0(a5)
+    805e2010:	40a7053b          	subw	a0,a4,a0
+    805e2014:	8082                	ret
+	...
