@@ -54,7 +54,7 @@ _1st stage ISP is only capable of loading K210 program to the requested SRAM add
 
 ## New and changed command line arguments:
 
-| Argument | Description |
+| Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
 | :--- | :--- |
 | **`-a ADDRESS`**<br>**`--address ADDRESS`** | Flash address at which the firmware/data will be written for Flash **write** operations<br>Flash address from which the data will be read for Flash **read** operations<br>integer, can be given as decimal or hex number<br>_default:_ `0` |
 | **`-E`**<br>**`--erase`** | Erase the whole flash chip<br>**Be carefull!** |
