@@ -1672,17 +1672,19 @@ class KTool:
                 sys.exit(1)
             elif file_format == ProgramFileFormat.FMT_ELF:
                 self.loader.load_elf_to_sram(firmware_bin)
-                KTool.log("==== Start terminal ====\n")
                 if(args.terminal == True):
+                    KTool.log("==== Start terminal ====\n")
                     open_terminal(False, args.termbdr, not args.noansi, mpyterm=args.mpyterm)
             else:
                 self.loader.flash_firmware(firmware_bin.read(), tosram=True)
-                KTool.log("==== Start terminal ====\n")
                 if(args.terminal == True):
+                    KTool.log("==== Start terminal ====\n")
                     open_terminal(False, args.termbdr, not args.noansi, mpyterm=args.mpyterm)
 
-            msg = "Load to SRAM OK"
-            raise_exception( Exception(msg) )
+            KTool.log(WARN_MSG, "Loaded to SRAM, but terminal emulator not started!")
+            KTool.log(INFO_MSG, "You need to start a new terminal emulator without")
+            KTool.log(INFO_MSG, "resetting the board to attach to the running firmware\n")
+            sys.exit(0)
 
         # ====================================
         # Initialize K210 SPI Flash operations
