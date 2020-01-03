@@ -1408,7 +1408,6 @@ class KTool:
             parser.add_argument("--reset", help="Reset the board before running terminal emulator", default=False, action="store_true")
             parser.add_argument("firmware", nargs='?', help="firmware bin path, can be omited for read and erase commands", default="flash_dump.bin")
             args = parser.parse_args()
-            parser.parse_args(['--version'])
         else:
             args = argparse.Namespace()
             setattr(args, "port", "DEFAULT")
